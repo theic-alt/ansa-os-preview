@@ -1,0 +1,1666 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ANSA OS & ANSA Studio — Spaceborn Autonomy & Mission Planning</title>
+  <meta name="description" content="ANSA OS & ANSA Studio by Spaceborn: Unified ArduPilot & MAVLink mission planning, SITL/HIL simulation, Certainty validation, and SB ELIO dual-MCU hardware deployment." />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Inter, Space Grotesk, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            display: ['Space Grotesk', 'Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            obsidian: '#090A0D',
+            surface: '#111318',
+            elevated: '#181B22',
+            hairline: '#22252C',
+            silver: '#E8ECF2',
+            muted: '#8E96A4',
+            telemetry: '#38BDF8',
+            amberops: '#F59E0B',
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    /* Base Spaceborn dark engineering aesthetic */
+    body {
+      background-color: #090A0D;
+      color: #E8ECF2;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Subtle technical grid background */
+    .tech-grid {
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(34, 37, 44, 0.45) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(34, 37, 44, 0.45) 1px, transparent 1px);
+    }
+
+    .tech-grid-fine {
+      background-size: 16px 16px;
+      background-image: 
+        linear-gradient(to right, rgba(56, 189, 248, 0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(56, 189, 248, 0.06) 1px, transparent 1px);
+    }
+
+    /* Custom subtle scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #090A0D;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #22252C;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #363B47;
+    }
+
+    /* Tactical HUD pulse */
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.92); }
+    }
+    .status-pulse {
+      animation: pulseDot 2.2s infinite ease-in-out;
+    }
+
+    /* Clean tab transition */
+    .panel-fade {
+      animation: panelFade 0.24s ease-out;
+    }
+    @keyframes panelFade {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-sky-500/25 selection:text-sky-200">
+
+  <!-- ===================================================================== -->
+  <!-- TOP NAVIGATION BAR                                                    -->
+  <!-- ===================================================================== -->
+  <header class="sticky top-0 z-40 bg-[#090A0D]/90 backdrop-blur-md border-b border-[#22252C]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <!-- Brand Wordmark -->
+      <a href="#overview" class="flex items-center gap-3 group">
+        <!-- Minimalist Spaceborn / ANSA Robot Emblem SVG -->
+        <div class="w-8 h-8 rounded-lg bg-[#111318] border border-[#22252C] flex items-center justify-center group-hover:border-sky-400/50 transition-colors">
+          <svg class="w-5 h-5 text-[#E8ECF2]" viewBox="0 0 24 24" fill="none">
+            <rect x="4" y="6" width="16" height="12" rx="6" fill="#E8ECF2"/>
+            <rect x="6.5" y="8.5" width="11" height="7" rx="3.5" fill="#090A0D"/>
+            <circle cx="9.5" cy="12" r="1.1" fill="#E8ECF2"/>
+            <circle cx="14.5" cy="12" r="1.1" fill="#E8ECF2"/>
+            <line x1="17" y1="6" x2="19.5" y2="3.5" stroke="#E8ECF2" stroke-width="1.4" stroke-linecap="round"/>
+            <circle cx="20" cy="3" r="1.2" fill="#38BDF8"/>
+          </svg>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span class="font-display font-semibold tracking-tight text-base text-[#E8ECF2]">SPACEBORN</span>
+          <span class="text-[#22252C]">/</span>
+          <span class="font-mono text-xs text-[#8E96A4]">ANSA OS</span>
+          <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-[#181B22] border border-[#22252C] text-sky-400">v0.3</span>
+        </div>
+      </a>
+
+      <!-- Desktop Anchor Links -->
+      <nav class="hidden md:flex items-center gap-7 text-xs font-medium text-[#8E96A4]">
+        <a href="#overview" class="hover:text-[#E8ECF2] transition-colors">Overview</a>
+        <a href="#mission-planner" class="hover:text-[#E8ECF2] transition-colors">Mission Planner</a>
+        <a href="#architecture" class="hover:text-[#E8ECF2] transition-colors">Architecture</a>
+        <a href="#elio-hardware" class="hover:text-[#E8ECF2] transition-colors">SB ELIO Hardware</a>
+        <a href="#media-gallery" class="hover:text-[#E8ECF2] transition-colors">Media &amp; Demo Reel</a>
+      </nav>
+
+      <!-- Action & Hardware Link Status -->
+      <div class="flex items-center gap-2.5">
+        <button onclick="openMediaUploadModal()" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#111318] hover:bg-[#181B22] border border-[#22252C] text-[#E8ECF2] font-mono text-[11px] transition-colors">
+          <svg class="w-3.5 h-3.5 text-sky-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+          </svg>
+          <span>Add Video / Media</span>
+        </button>
+        <button onclick="openStudioModal()" class="px-3.5 py-2 rounded-lg bg-[#E8ECF2] hover:bg-white text-[#090A0D] font-medium text-xs transition-all flex items-center gap-2 shadow-sm">
+          <span>Launch ANSA Studio</span>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================================================================== -->
+  <!-- HERO SECTION                                                          -->
+  <!-- ===================================================================== -->
+  <section id="overview" class="relative border-b border-[#22252C] tech-grid">
+    <div class="absolute inset-0 bg-gradient-to-b from-[#090A0D]/30 via-[#090A0D]/80 to-[#090A0D] pointer-events-none"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16 lg:pt-20 lg:pb-24">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-start">
+        
+        <!-- Left Asymmetric Editorial & Technical Copy -->
+        <div class="lg:col-span-5 space-y-6">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#111318] border border-[#22252C] font-mono text-[11px] tracking-wider text-sky-400">
+            <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+            SPACEBORN AUTONOMY STACK · ARDUPILOT &amp; MAVLINK NATIVE
+          </div>
+
+          <h1 class="font-display font-bold text-3xl sm:text-4xl lg:text-[42px] leading-[1.12] tracking-tight text-[#E8ECF2]">
+            Mission Planning &amp; Autonomy OS for Physical Machines.
+          </h1>
+
+          <p class="text-sm sm:text-base text-[#8E96A4] leading-relaxed">
+            ANSA OS &amp; ANSA Studio unify ArduPilot mission planning, SITL/HIL simulation, and deterministic hardware deployment across UAVs, rovers, and robotic platforms—eliminating fragmented ground control toolchains.
+          </p>
+
+          <!-- Value Pipeline Pill Strip -->
+          <div class="p-3 rounded-xl bg-[#111318]/90 border border-[#22252C] font-mono text-[11px] text-[#8E96A4] flex flex-wrap items-center gap-2">
+            <span class="text-[#E8ECF2]">Build</span>
+            <span class="text-sky-400">→</span>
+            <span class="text-[#E8ECF2]">Simulate (SITL/HIL)</span>
+            <span class="text-sky-400">→</span>
+            <span class="text-[#E8ECF2]">Validate (Certainty)</span>
+            <span class="text-sky-400">→</span>
+            <span class="text-amber-400">Deploy</span>
+          </div>
+
+          <!-- Primary & Secondary CTAs -->
+          <div class="flex flex-wrap items-center gap-3 pt-1">
+            <a href="#mission-planner" class="px-5 py-3 rounded-lg bg-sky-500 hover:bg-sky-400 text-[#090A0D] font-semibold text-xs sm:text-sm transition-colors">
+              Explore Mission Planner
+            </a>
+            <a href="#elio-hardware" class="px-5 py-3 rounded-lg bg-[#111318] hover:bg-[#181B22] border border-[#22252C] text-[#E8ECF2] font-medium text-xs sm:text-sm transition-colors">
+              Inspect SB ELIO v0.2 Specs
+            </a>
+          </div>
+
+          <!-- Interactive Studio Hotspot Selector -->
+          <div class="pt-4 border-t border-[#22252C]">
+            <div class="text-[11px] font-mono uppercase tracking-wider text-[#8E96A4] mb-2.5">
+              ANSA Studio Live Telemetry Highlights
+            </div>
+            <div class="grid grid-cols-3 gap-2" id="hero-hotspot-tabs">
+              <button onclick="selectHeroHotspot('collaborator')" data-hotspot="collaborator" class="hotspot-btn active text-left p-2.5 rounded-lg bg-[#181B22] border border-sky-400/60 transition-all">
+                <div class="font-mono text-[11px] text-sky-400">01 / AI AGENT</div>
+                <div class="text-xs font-medium text-[#E8ECF2] mt-0.5 truncate">ANSA Collaborator</div>
+              </button>
+              <button onclick="selectHeroHotspot('target')" data-hotspot="target" class="hotspot-btn text-left p-2.5 rounded-lg bg-[#111318] border border-[#22252C] hover:border-[#363B47] transition-all">
+                <div class="font-mono text-[11px] text-emerald-400">98% MATCH</div>
+                <div class="text-xs font-medium text-[#E8ECF2] mt-0.5 truncate">Hardware Target</div>
+              </button>
+              <button onclick="selectHeroHotspot('robobench')" data-hotspot="robobench" class="hotspot-btn text-left p-2.5 rounded-lg bg-[#111318] border border-[#22252C] hover:border-[#363B47] transition-all">
+                <div class="font-mono text-[11px] text-amber-400">64% ACTIVE</div>
+                <div class="text-xs font-medium text-[#E8ECF2] mt-0.5 truncate">RoboBench Rig</div>
+              </button>
+            </div>
+            <div id="hero-hotspot-detail" class="mt-2.5 p-3 rounded-lg bg-[#111318] border border-[#22252C] text-xs text-[#8E96A4] leading-relaxed">
+              <strong class="text-[#E8ECF2]">ANSA Collaborator:</strong> Context-aware engineering copilot bound directly to your hardware target (ELARA, HPU, SB ELIO) and ArduPilot parameter tree.
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Visual Showcase: Desktop Studio Mockup + Mobile Companion -->
+        <div class="lg:col-span-7 relative">
+          <!-- Main Desktop Frame -->
+          <div class="rounded-xl bg-[#111318] border border-[#22252C] overflow-hidden shadow-2xl">
+            <!-- Window Top Bar -->
+            <div class="px-4 py-2.5 bg-[#181B22] border-b border-[#22252C] flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#2E323C]"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-[#2E323C]"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-[#2E323C]"></span>
+                <span class="ml-2 font-mono text-[11px] text-[#8E96A4]">ansa-studio://workspace/ardupilot-mission-04</span>
+              </div>
+              <span class="font-mono text-[10px] px-2 py-0.5 rounded bg-[#090A0D] border border-[#22252C] text-emerald-400">
+                MAVLINK 2.0 · 50Hz
+              </span>
+            </div>
+
+            <!-- Uploaded Desktop ANSA Studio Image -->
+            <div onclick="openLightbox('photo_2026-11-25_19-57-20.jpg', 'ANSA Studio Desktop Workspace — Unified ArduPilot & Hardware Orchestration')" class="relative bg-[#090A0D] aspect-[16/10] overflow-hidden cursor-zoom-in group">
+              <img 
+                data-asset="photo_2026-11-25_19-57-20.jpg"
+                src="photo_2026-11-25_19-57-20.jpg" 
+                alt="ANSA Studio Desktop Workspace on Spaceborn Hardware"
+                class="w-full h-full object-cover object-center group-hover:scale-[1.01] transition-transform duration-300"
+                onerror="this.onerror=null; this.src='https://placehold.co/1200x750/111318/E8ECF2?text=ANSA+Studio+Desktop+Workspace';"
+              />
+              <!-- Subtle Technical Overlay Badge -->
+              <div class="absolute bottom-3 left-3 px-2.5 py-1 rounded bg-[#090A0D]/90 backdrop-blur border border-[#22252C] font-mono text-[10px] text-[#E8ECF2]">
+                ELARA + ELIO Bus Sync · Certainty Ready
+              </div>
+              <div class="absolute top-3 right-3 px-2 py-1 rounded bg-[#090A0D]/85 border border-[#22252C] font-mono text-[10px] text-[#8E96A4] opacity-0 group-hover:opacity-100 transition-opacity">
+                CLICK TO INSPECT
+              </div>
+            </div>
+          </div>
+
+          <!-- Floating Mobile Companion Frame (Bottom-Right on Desktop, Stacked cleanly on Mobile) -->
+          <div onclick="openLightbox('photo_2026-11-25_19-57-10.jpg', 'ANSA Studio Mobile Companion — Field Telemetry & Quick Launch')" class="mt-4 sm:mt-0 sm:absolute sm:-bottom-6 sm:-right-3 sm:w-44 md:w-48 rounded-xl bg-[#111318] border border-[#22252C] p-1.5 shadow-2xl cursor-zoom-in group">
+            <div class="rounded-lg overflow-hidden bg-[#090A0D] aspect-[9/15]">
+              <img 
+                data-asset="photo_2026-11-25_19-57-10.jpg"
+                src="photo_2026-11-25_19-57-10.jpg" 
+                alt="ANSA Studio Mobile Companion App"
+                class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                onerror="this.onerror=null; this.src='https://placehold.co/360x600/111318/38BDF8?text=ANSA+Mobile';"
+              />
+            </div>
+            <div class="pt-1.5 px-1 flex items-center justify-between font-mono text-[10px] text-[#8E96A4]">
+              <span>Field Companion</span>
+              <span class="text-sky-400">iOS / Android</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- INTERACTIVE ARDUPILOT MISSION PLANNER & TELEMETRY SANDBOX             -->
+  <!-- ===================================================================== -->
+  <section id="mission-planner" class="py-16 lg:py-24 border-b border-[#22252C]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- Section Header -->
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+        <div>
+          <div class="font-mono text-xs text-sky-400 uppercase tracking-wider mb-1.5">
+            01 // GROUND CONTROL &amp; SITL SANDBOX
+          </div>
+          <h2 class="font-display font-bold text-2xl sm:text-3xl text-[#E8ECF2]">
+            ArduPilot Mission Planner &amp; MAVLink Telemetry
+          </h2>
+          <p class="text-sm text-[#8E96A4] mt-1 max-w-2xl">
+            Click anywhere on the tactical grid to append waypoints, switch hardware profiles, run a real-time <span class="text-[#E8ECF2]">Certainty SITL</span> safety validation, or export native <code class="font-mono text-xs text-sky-400">QGC WPL 110</code> mission files.
+          </p>
+        </div>
+
+        <!-- Vehicle Profile Switcher -->
+        <div class="flex flex-wrap items-center gap-2">
+          <label for="vehicle-profile" class="font-mono text-xs text-[#8E96A4]">TARGET:</label>
+          <select id="vehicle-profile" onchange="changeVehicleProfile()" class="bg-[#111318] border border-[#22252C] rounded-lg px-3 py-2 text-xs font-mono text-[#E8ECF2] focus:outline-none focus:border-sky-400">
+            <option value="uav">UAV / Drones (ELARA + ARIA)</option>
+            <option value="rover">Ground Vehicles (ELIO + HPU)</option>
+            <option value="custom">Custom Full-Stack (ELIO Core)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Main Mission Planner Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        
+        <!-- Left 8 Cols: Interactive Tactical Waypoint Map -->
+        <div class="lg:col-span-8 rounded-xl bg-[#111318] border border-[#22252C] overflow-hidden flex flex-col">
+          <!-- Map Toolbar -->
+          <div class="px-4 py-3 bg-[#181B22] border-b border-[#22252C] flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="font-mono text-[11px] text-[#8E96A4]">ADD CMD:</span>
+              <button onclick="setCommandMode('WAYPOINT')" id="cmd-WAYPOINT" class="cmd-btn px-2.5 py-1 rounded text-xs font-mono bg-sky-500/20 text-sky-300 border border-sky-400/50">WAYPOINT</button>
+              <button onclick="setCommandMode('LOITER_UNLIM')" id="cmd-LOITER_UNLIM" class="cmd-btn px-2.5 py-1 rounded text-xs font-mono bg-[#111318] text-[#8E96A4] border border-[#22252C] hover:text-[#E8ECF2]">LOITER</button>
+              <button onclick="setCommandMode('ROI')" id="cmd-ROI" class="cmd-btn px-2.5 py-1 rounded text-xs font-mono bg-[#111318] text-[#8E96A4] border border-[#22252C] hover:text-[#E8ECF2]">ROI</button>
+              <button onclick="setCommandMode('RTL')" id="cmd-RTL" class="cmd-btn px-2.5 py-1 rounded text-xs font-mono bg-[#111318] text-[#8E96A4] border border-[#22252C] hover:text-[#E8ECF2]">RTL</button>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button onclick="toggleSimulationFlight()" id="sim-toggle-btn" class="px-3 py-1.5 rounded bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 font-mono text-xs transition-colors">
+                ▶ Simulate Path
+              </button>
+              <button onclick="resetMission()" class="px-2.5 py-1.5 rounded bg-[#111318] hover:bg-[#22252C] border border-[#22252C] text-[#8E96A4] hover:text-[#E8ECF2] font-mono text-xs transition-colors">
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <!-- Interactive SVG Tactical Canvas -->
+          <div class="relative w-full h-[360px] sm:h-[420px] bg-[#090A0D] tech-grid-fine select-none">
+            <svg id="mission-svg" viewBox="0 0 800 440" class="w-full h-full cursor-crosshair" preserveAspectRatio="xMidYMid slice">
+              <defs>
+                <pattern id="smallGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                  <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#181B22" stroke-width="0.7"/>
+                </pattern>
+                <pattern id="largeGrid" width="100" height="100" patternUnits="userSpaceOnUse">
+                  <rect width="100" height="100" fill="url(#smallGrid)"/>
+                  <path d="M 100 0 L 0 0 0 100" fill="none" stroke="#22252C" stroke-width="1"/>
+                </pattern>
+              </defs>
+
+              <!-- Coordinate Grid -->
+              <rect width="800" height="440" fill="url(#largeGrid)" />
+
+              <!-- Geofence Boundary Ring -->
+              <rect x="36" y="32" width="728" height="376" rx="12" fill="none" stroke="#F59E0B" stroke-opacity="0.28" stroke-dasharray="6 6" stroke-width="1.2"/>
+              <text x="48" y="50" fill="#F59E0B" fill-opacity="0.65" font-family="JetBrains Mono" font-size="10">GEOFENCE_ALT_MAX: 120m · RADIUS: 500m</text>
+
+              <!-- Home / Launch Origin Marker -->
+              <g id="home-marker" transform="translate(110, 340)">
+                <circle r="14" fill="#38BDF8" fill-opacity="0.12" stroke="#38BDF8" stroke-width="1"/>
+                <circle r="3.5" fill="#38BDF8"/>
+                <text x="-14" y="25" fill="#8E96A4" font-family="JetBrains Mono" font-size="10">HOME (0)</text>
+              </g>
+
+              <!-- Dynamic Flight Path Polyline -->
+              <polyline id="mission-polyline" fill="none" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="" />
+
+              <!-- Waypoint Nodes Container -->
+              <g id="waypoints-layer"></g>
+
+              <!-- Live Simulated Vehicle Marker -->
+              <g id="vehicle-marker" transform="translate(110, 340)">
+                <polygon points="0,-9 7,7 0,3 -7,7" fill="#F59E0B" stroke="#090A0D" stroke-width="1"/>
+              </g>
+            </svg>
+
+            <!-- Bottom Map Coordinates Overlay -->
+            <div class="absolute bottom-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 pointer-events-none font-mono text-[11px]">
+              <div class="px-2.5 py-1 rounded bg-[#111318]/90 border border-[#22252C] text-[#8E96A4]">
+                DATUM: <span class="text-[#E8ECF2]">12.9716° N, 77.5946° E</span> (BLR Test Range)
+              </div>
+              <div id="cursor-coords" class="px-2.5 py-1 rounded bg-[#111318]/90 border border-[#22252C] text-sky-400">
+                CLICK MAP TO INSERT WAYPOINT
+              </div>
+            </div>
+          </div>
+
+          <!-- Waypoint Parameters Table & Quick Sliders -->
+          <div class="p-4 bg-[#111318] border-t border-[#22252C] grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <div class="flex justify-between font-mono text-[11px] text-[#8E96A4] mb-1">
+                <span>DEFAULT ALTITUDE</span>
+                <span id="alt-readout" class="text-[#E8ECF2]">45 m</span>
+              </div>
+              <input id="alt-slider" type="range" min="10" max="150" value="45" oninput="updateMissionParams()" class="w-full accent-sky-400 cursor-pointer" />
+            </div>
+            <div>
+              <div class="flex justify-between font-mono text-[11px] text-[#8E96A4] mb-1">
+                <span>CRUISE AIRSPEED</span>
+                <span id="spd-readout" class="text-[#E8ECF2]">14.0 m/s</span>
+              </div>
+              <input id="spd-slider" type="range" min="2" max="28" value="14" oninput="updateMissionParams()" class="w-full accent-sky-400 cursor-pointer" />
+            </div>
+            <div class="flex items-center justify-between sm:justify-end gap-2">
+              <button onclick="openWplModal()" class="w-full sm:w-auto px-3.5 py-2 rounded-lg bg-[#181B22] hover:bg-[#22252C] border border-[#22252C] font-mono text-xs text-[#E8ECF2] transition-colors">
+                Export QGC WPL 110
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right 4 Cols: Live MAVLink Telemetry & Certainty Validation -->
+        <div class="lg:col-span-4 space-y-4">
+          
+          <!-- MAVLink Frame Telemetry Panel -->
+          <div class="rounded-xl bg-[#111318] border border-[#22252C] p-4">
+            <div class="flex items-center justify-between pb-3 mb-3 border-b border-[#22252C]">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 status-pulse"></span>
+                <span class="font-mono text-xs font-semibold text-[#E8ECF2]">MAVLINK TELEMETRY</span>
+              </div>
+              <span id="telem-mode-badge" class="font-mono text-[10px] px-2 py-0.5 rounded bg-[#181B22] text-sky-400 border border-[#22252C]">
+                GUIDED / AUTO
+              </span>
+            </div>
+
+            <!-- Telemetry Metrics Grid -->
+            <div class="grid grid-cols-2 gap-2.5 font-mono">
+              <div class="p-2.5 rounded-lg bg-[#090A0D] border border-[#22252C]">
+                <div class="text-[10px] text-[#8E96A4]">ATTITUDE (R/P/Y)</div>
+                <div id="telem-attitude" class="text-xs text-[#E8ECF2] mt-1">+0.4° / -1.2° / 142°</div>
+              </div>
+              <div class="p-2.5 rounded-lg bg-[#090A0D] border border-[#22252C]">
+                <div class="text-[10px] text-[#8E96A4]">GPS_RAW_INT</div>
+                <div id="telem-gps" class="text-xs text-emerald-400 mt-1">3D RTK · 18 SAT</div>
+              </div>
+              <div class="p-2.5 rounded-lg bg-[#090A0D] border border-[#22252C]">
+                <div class="text-[10px] text-[#8E96A4]">SYS_STATUS BATT</div>
+                <div id="telem-batt" class="text-xs text-[#E8ECF2] mt-1">24.8 V · 94%</div>
+              </div>
+              <div class="p-2.5 rounded-lg bg-[#090A0D] border border-[#22252C]">
+                <div class="text-[10px] text-[#8E96A4]">MISSION_CURRENT</div>
+                <div id="telem-wp" class="text-xs text-amber-400 mt-1">SEQ 1 / 4</div>
+              </div>
+            </div>
+
+            <!-- EKF & Link Bar -->
+            <div class="mt-3 pt-3 border-t border-[#22252C] flex items-center justify-between font-mono text-[11px] text-[#8E96A4]">
+              <span>EKF3: <strong class="text-emerald-400">HEALTHY</strong></span>
+              <span id="telem-dist">DIST: 642 m</span>
+              <span id="telem-eta">ETA: 46 s</span>
+            </div>
+          </div>
+
+          <!-- Certainty SITL Validation Card -->
+          <div class="rounded-xl bg-[#111318] border border-[#22252C] p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-mono text-xs font-semibold text-[#E8ECF2]">CERTAINTY SITL CHECK</span>
+              <span id="certainty-score" class="font-mono text-xs px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                PASS · 98%
+              </span>
+            </div>
+            <p class="text-xs text-[#8E96A4] leading-relaxed mb-3">
+              Validates geofence boundaries, max climb rate, battery reserve margin, and ELARA/ELIO pinout compatibility prior to hardware flash.
+            </p>
+            <button onclick="runCertaintyCheck()" class="w-full py-2.5 px-4 rounded-lg bg-[#E8ECF2] hover:bg-white text-[#090A0D] font-semibold text-xs transition-colors">
+              Run Certainty SITL Check
+            </button>
+            <div id="certainty-log" class="mt-3 p-2.5 rounded-lg bg-[#090A0D] border border-[#22252C] font-mono text-[11px] text-[#8E96A4] space-y-1">
+              <div class="text-emerald-400">✓ Geofence polygon check passed (max alt &le; 120m)</div>
+              <div class="text-emerald-400">✓ MAVLink heartbeat latency &lt; 4.2ms on ELIO UART</div>
+              <div class="text-sky-400">• Ready for HIL / Field deployment</div>
+            </div>
+          </div>
+
+          <!-- Compact Waypoint Sequence List -->
+          <div class="rounded-xl bg-[#111318] border border-[#22252C] p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-mono text-xs font-semibold text-[#E8ECF2]">WAYPOINT QUEUE</span>
+              <span id="wp-count-label" class="font-mono text-[11px] text-[#8E96A4]">4 ITEMS</span>
+            </div>
+            <div id="waypoint-list" class="max-h-36 overflow-y-auto space-y-1.5 font-mono text-[11px]">
+              <!-- Populated via JS -->
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- ALL-IN-ONE ANSA STUDIO 7-PILLAR ARCHITECTURE                          -->
+  <!-- ===================================================================== -->
+  <section id="architecture" class="py-16 lg:py-24 border-b border-[#22252C] bg-[#0B0C10]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="max-w-3xl mb-10">
+        <div class="font-mono text-xs text-sky-400 uppercase tracking-wider mb-1.5">
+          02 // UNIFIED PLATFORM TOPOLOGY
+        </div>
+        <h2 class="font-display font-bold text-2xl sm:text-3xl text-[#E8ECF2]">
+          All in One — ANSA Studio Architecture
+        </h2>
+        <p class="text-sm text-[#8E96A4] mt-2">
+          Software · Hardware · Simulation · Reality · AI — converged into a single deterministic engineering loop. Select any architectural domain below to inspect its ArduPilot &amp; MAVLink execution pipeline.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        
+        <!-- Left 6 Cols: Reference Hub-and-Spoke Diagram + Interactive Pillar Selector -->
+        <div class="lg:col-span-6 space-y-4">
+          <div onclick="openLightbox('photo_2026-11-25_19-57-17.jpg', 'All in One — ANSA Studio 7-Pillar Convergence Architecture')" class="rounded-xl bg-[#111318] border border-[#22252C] p-3 overflow-hidden cursor-zoom-in group">
+            <div class="rounded-lg overflow-hidden bg-white">
+              <img 
+                data-asset="photo_2026-11-25_19-57-17.jpg"
+                src="photo_2026-11-25_19-57-17.jpg" 
+                alt="All in One ANSA Studio Hub and Spoke Architecture Diagram"
+                class="w-full h-auto object-contain group-hover:scale-[1.01] transition-transform duration-300"
+                onerror="this.onerror=null; this.src='https://placehold.co/960x540/111318/E8ECF2?text=ANSA+Studio+7-Pillar+Architecture';"
+              />
+            </div>
+            <div class="pt-2.5 px-1 flex items-center justify-between font-mono text-[11px] text-[#8E96A4]">
+              <span>FIG 2.1 — ANSA STUDIO CONVERGENCE GRAPH</span>
+              <span class="text-sky-400">CLICK TO EXPAND</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right 6 Cols: Interactive 7-Pillar Matrix & Pipeline Inspector -->
+        <div class="lg:col-span-6 space-y-4">
+          <!-- 7 Pillar Interactive Pills -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5" id="pillar-grid">
+            <button onclick="selectPillar('software')" data-pillar="software" class="pillar-card active text-left p-3.5 rounded-xl bg-[#181B22] border border-sky-400/60 transition-all">
+              <div class="flex items-center justify-between">
+                <span class="font-display font-semibold text-sm text-[#E8ECF2]">01. Software</span>
+                <span class="font-mono text-[10px] text-sky-400">CORE</span>
+              </div>
+              <div class="font-mono text-[11px] text-[#8E96A4] mt-1">Develop · Build · Deploy</div>
+            </button>
+
+            <button onclick="selectPillar('simulations')" data-pillar="simulations" class="pillar-card text-left p-3.5 rounded-xl bg-[#111318] border border-[#22252C] hover:border-[#363B47] transition-all">
+              <div class="flex items-center justify-between">
+                <span class="font-display font-semibold text-sm text-[#E8ECF2]">02. Simulations</span>
+                <span class="font-mono text-[10px] text-[#8E96A4]">SITL</span>
+              </div>
+              <div class="font-mono text-[11px] text-[#8E96A4] mt-1">SITL · Digital Twin · Scenario</div>
+            </button>
+
+            <button onclick="selectPillar('ai')" data-pillar="ai" class="pillar-card text-left p-3.5 rounded-xl bg-[#111318] border border-[#22252C] hover:border-[#363B47] transition-all">
+              <div class="flex items-center justify-between">
+                <span class="font-display font-semibold text-sm text-[#E8ECF2]">03. AI</span>
+                <span class="font-mono text-[10px] text-[#8E96A4]">EDGE</span>
+              </div>
+              <div class="font-mono text-[11px] text-[#8E96A4] mt-1">Models · Autonomy · Reasoning</div>
+            </button>
+
+            <button onclick="selectPillar('testing')" data-pillar="testing" class="pillar-card text-left p-3.5 rounded-xl bg-[#111318] border border-[#22252C] hover:border-[#363B47] transition-all">
+              <div class="flex items-center justify-between">
+                <span class="font-display font-semibold text-sm text-[#E8ECF2]">04. Real-World Testing</span>
+                <span class="font-mono text-[10px] text-[#8E96A4]">HIL</span>
+              </div>
+              <div class="font-mono text-[11px] text-[#8E96A4] mt-1">Hardware-in-Loop · Field · Validation</div>
+            </button>
+
+            <button onclick="selectPillar('workspace')" data-pillar="workspace" class="pillar-card text-left p-3.5 rounded-xl bg-[#111318] border border-[#22252C] hover:border-[#363B47] transition-all">
+              <div class="flex items-center justify-between">
+                <span class="font-display font-semibold text-sm text-[#E8ECF2]">05. Unified Workspace</span>
+                <span class="font-mono text-[10px] text-[#8E96A4]">GCS</span>
+              </div>
+              <div class="font-mono text-[11px] text-[#8E96A4] mt-1">Plan · Develop · Simulate · Test · Deploy</div>
+            </button>
+
+            <button onclick="selectPillar('virtualization')" data-pillar="virtualization" class="pillar-card text-left p-3.5 rounded-xl bg-[#111318] border border-[#22252C] hover:border-[#363B47] transition-all">
+              <div class="flex items-center justify-between">
+                <span class="font-display font-semibold text-sm text-[#E8ECF2]">06. Virtualization</span>
+                <span class="font-mono text-[10px] text-[#8E96A4]">BUS</span>
+              </div>
+              <div class="font-mono text-[11px] text-[#8E96A4] mt-1">Sim-to-Real · HIL · System</div>
+            </button>
+
+            <button onclick="selectPillar('reality')" data-pillar="reality" class="pillar-card sm:col-span-2 text-left p-3.5 rounded-xl bg-[#111318] border border-[#22252C] hover:border-[#363B47] transition-all">
+              <div class="flex items-center justify-between">
+                <span class="font-display font-semibold text-sm text-[#E8ECF2]">07. Reality Engines</span>
+                <span class="font-mono text-[10px] text-[#8E96A4]">PERCEPTION</span>
+              </div>
+              <div class="font-mono text-[11px] text-[#8E96A4] mt-1">Perception · World Model · Emulation</div>
+            </button>
+          </div>
+
+          <!-- Active Pillar Technical Breakdown Box -->
+          <div id="pillar-inspector" class="p-5 rounded-xl bg-[#111318] border border-[#22252C] space-y-3 panel-fade">
+            <div class="flex items-center justify-between">
+              <span id="pillar-title" class="font-display font-semibold text-base text-[#E8ECF2]">Software — Develop · Build · Deploy</span>
+              <span id="pillar-tag" class="font-mono text-[11px] px-2 py-0.5 rounded bg-sky-500/15 text-sky-400">ARDUPILOT / LUA / C++</span>
+            </div>
+            <p id="pillar-desc" class="text-xs sm:text-sm text-[#8E96A4] leading-relaxed">
+              Compiles custom ArduPilot firmware targets, Lua flight scripts, and companion ROS2/MAVLink nodes directly inside ANSA Studio with deterministic dependency pinning and one-click OTA/USB flashing.
+            </p>
+            <div class="p-3 rounded-lg bg-[#090A0D] border border-[#22252C] font-mono text-[11px] text-sky-300 overflow-x-auto">
+              <span id="pillar-cli">$ ansa build --target sb-elio-v0.2 --stack ardupilot-4.5 --verify certainty</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- SPACEBORN HARDWARE ECOSYSTEM — DEEP DIVE ON SB ELIO v0.2              -->
+  <!-- ===================================================================== -->
+  <section id="elio-hardware" class="py-16 lg:py-24 border-b border-[#22252C]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- Section Header -->
+      <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-10">
+        <div>
+          <div class="font-mono text-xs text-amber-400 uppercase tracking-wider mb-1.5">
+            03 // SPACEBORN COMPUTE &amp; CONTROL HARDWARE
+          </div>
+          <h2 class="font-display font-bold text-2xl sm:text-3xl text-[#E8ECF2]">
+            SB ELIO v0.2 — Emergent Logic Intelligence Operator
+          </h2>
+          <p class="text-sm text-[#8E96A4] mt-1.5 max-w-2xl">
+            Dual-MCU AI &amp; real-time deterministic control board pairing an <span class="text-[#E8ECF2]">ESP32-S3-WROOM-1</span> wireless AI processor with an <span class="text-[#E8ECF2]">RP2350B</span> dual Cortex-M33 I/O controller in a 51.0 × 21.0 mm footprint.
+          </p>
+        </div>
+
+        <!-- Hardware View Switcher Tabs -->
+        <div class="flex flex-wrap gap-1.5 p-1 rounded-xl bg-[#111318] border border-[#22252C]">
+          <button onclick="switchHwView('exploded')" data-hw="exploded" class="hw-tab active px-3 py-1.5 rounded-lg font-mono text-xs bg-[#181B22] text-[#E8ECF2] border border-sky-400/50">Exploded 3D</button>
+          <button onclick="switchHwView('datasheet')" data-hw="datasheet" class="hw-tab px-3 py-1.5 rounded-lg font-mono text-xs text-[#8E96A4] hover:text-[#E8ECF2]">Spec Sheet A</button>
+          <button onclick="switchHwView('datasheet-b')" data-hw="datasheet-b" class="hw-tab px-3 py-1.5 rounded-lg font-mono text-xs text-[#8E96A4] hover:text-[#E8ECF2]">Spec Sheet B</button>
+          <button onclick="switchHwView('callouts')" data-hw="callouts" class="hw-tab px-3 py-1.5 rounded-lg font-mono text-xs text-[#8E96A4] hover:text-[#E8ECF2]">Dual-MCU Callouts</button>
+          <button onclick="switchHwView('pcb')" data-hw="pcb" class="hw-tab px-3 py-1.5 rounded-lg font-mono text-xs text-[#8E96A4] hover:text-[#E8ECF2]">Isometric &amp; PCB</button>
+        </div>
+      </div>
+
+      <!-- Interactive Hardware Viewer Container -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- Left 7 Cols: Dynamic Hardware Render Stage -->
+        <div class="lg:col-span-7 rounded-xl bg-[#111318] border border-[#22252C] overflow-hidden">
+          
+          <!-- View 1: Exploded Stack (Default) -->
+          <div id="hw-view-exploded" class="hw-view panel-fade">
+            <div onclick="openLightbox('photo_2026-11-25_19-57-07.jpg', 'SB ELIO v0.2 — Exploded 3D Hardware Stack Assembly')" class="bg-[#050608] aspect-[16/10] flex items-center justify-center overflow-hidden cursor-zoom-in">
+              <img 
+                data-asset="photo_2026-11-25_19-57-07.jpg"
+                src="photo_2026-11-25_19-57-07.jpg" 
+                alt="SB ELIO v0.2 Exploded 3D Hardware Stack"
+                class="w-full h-full object-contain"
+                onerror="this.onerror=null; this.src='https://placehold.co/1000x625/090A0D/E8ECF2?text=SB+ELIO+v0.2+Exploded+Stack';"
+              />
+            </div>
+            <div class="p-4 border-t border-[#22252C] flex flex-wrap items-center justify-between gap-2 font-mono text-xs">
+              <span class="text-[#E8ECF2]">EXPLODED ASSEMBLY: RF Shield → PMIC → 4-Layer PCB → 2×20 Headers → Base Plate</span>
+              <span class="text-amber-400">REV v0.2</span>
+            </div>
+          </div>
+
+          <!-- View 2: Technical Spec Sheet A (Wireframe Exploded + Dimensions) -->
+          <div id="hw-view-datasheet" class="hw-view hidden panel-fade">
+            <div onclick="openLightbox('photo_2026-11-25_19-57-15.jpg', 'SB ELIO v0.2 — Wireframe Exploded View, Key Specifications & Dimensions')" class="bg-white aspect-[16/10] flex items-center justify-center overflow-hidden cursor-zoom-in">
+              <img 
+                data-asset="photo_2026-11-25_19-57-15.jpg"
+                src="photo_2026-11-25_19-57-15.jpg" 
+                alt="SB ELIO v0.2 Wireframe Spec Sheet & Block Diagram"
+                class="w-full h-full object-contain"
+                onerror="this.onerror=null; this.src='https://placehold.co/1000x625/111318/E8ECF2?text=SB+ELIO+Technical+Datasheet+A';"
+              />
+            </div>
+            <div class="p-4 border-t border-[#22252C] flex flex-wrap items-center justify-between gap-2 font-mono text-xs">
+              <span class="text-[#E8ECF2]">SCHEMATIC EXPLODED DATASHEET · 51.0 mm × 21.0 mm × ~6.8 mm</span>
+              <span class="text-sky-400">INTER-MCU: UART / SPI / I2C</span>
+            </div>
+          </div>
+
+          <!-- View 3: Technical Spec Sheet B (Full Color Exploded + Block Diagram) -->
+          <div id="hw-view-datasheet-b" class="hw-view hidden panel-fade">
+            <div onclick="openLightbox('photo_2026-11-25_19-57-12.jpg', 'SB ELIO v0.2 — Full-Render Hardware Architecture & Board Dimensions')" class="bg-white aspect-[16/10] flex items-center justify-center overflow-hidden cursor-zoom-in">
+              <img 
+                data-asset="photo_2026-11-25_19-57-12.jpg"
+                src="photo_2026-11-25_19-57-12.jpg" 
+                alt="SB ELIO v0.2 Full Color Spec Sheet & Block Diagram"
+                class="w-full h-full object-contain"
+                onerror="this.onerror=null; this.src='https://placehold.co/1000x625/111318/E8ECF2?text=SB+ELIO+Technical+Datasheet+B';"
+              />
+            </div>
+            <div class="p-4 border-t border-[#22252C] flex flex-wrap items-center justify-between gap-2 font-mono text-xs">
+              <span class="text-[#E8ECF2]">HARDWARE SPECIFICATION SHEET · ESP32-S3 + RP2350B BLOCK DIAGRAM</span>
+              <span class="text-amber-400">4-LAYER HIGH-SPEED PCB</span>
+            </div>
+          </div>
+
+          <!-- View 4: Dual-MCU Callouts -->
+          <div id="hw-view-callouts" class="hw-view hidden panel-fade">
+            <div onclick="openLightbox('photo_2026-11-25_19-57-14.jpg', 'Dual MCU AI Development Board — Top/Bottom Pinout & USB-C Callouts')" class="bg-white aspect-[16/10] flex items-center justify-center overflow-hidden cursor-zoom-in">
+              <img 
+                data-asset="photo_2026-11-25_19-57-14.jpg"
+                src="photo_2026-11-25_19-57-14.jpg" 
+                alt="SB ELIO Dual MCU AI Development Board Callouts"
+                class="w-full h-full object-contain"
+                onerror="this.onerror=null; this.src='https://placehold.co/1000x625/111318/E8ECF2?text=Dual+MCU+Callouts';"
+              />
+            </div>
+            <div class="p-4 border-t border-[#22252C] flex flex-wrap items-center justify-between gap-2 font-mono text-xs">
+              <span class="text-[#E8ECF2]">INDEPENDENT USB-C PORTS: USB-C 1 (ESP32-S3) · USB-C 2 (RP2350B)</span>
+              <span class="text-emerald-400">HDMI + EDGE AI</span>
+            </div>
+          </div>
+
+          <!-- View 5: Top / Bottom / Isometric PCB Inspection -->
+          <div id="hw-view-pcb" class="hw-view hidden panel-fade">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-[#090A0D]">
+              <div onclick="openLightbox('photo_2026-11-25_19-57-18.jpg', 'SB ELIO — Isometric 3D PCB CAD Render')" class="rounded-lg bg-[#111318] border border-[#22252C] p-2 flex flex-col items-center cursor-zoom-in hover:border-sky-400/50 transition-colors">
+                <img data-asset="photo_2026-11-25_19-57-18.jpg" src="photo_2026-11-25_19-57-18.jpg" alt="SB ELIO Isometric PCB" class="h-56 object-contain" />
+                <span class="mt-2 font-mono text-[10px] text-[#8E96A4]">ISOMETRIC 3D PCB</span>
+              </div>
+              <div onclick="openLightbox('photo_2026-11-25_19-57-09.jpg', 'SB ELIO — Top PCB Layout (ESP_USB / RP_USB / TO252 Regulator)')" class="rounded-lg bg-[#111318] border border-[#22252C] p-2 flex flex-col items-center cursor-zoom-in hover:border-sky-400/50 transition-colors">
+                <img data-asset="photo_2026-11-25_19-57-09.jpg" src="photo_2026-11-25_19-57-09.jpg" alt="SB ELIO Top View" class="h-56 object-contain" />
+                <span class="mt-2 font-mono text-[10px] text-[#8E96A4]">TOP VIEW (ESP_USB / RP_USB)</span>
+              </div>
+              <div onclick="openLightbox('photo_2026-11-25_19-57-04.jpg', 'SB ELIO V0.1 — Bottom Silkscreen (CAM Ribbon, SWCLK/SWDIO, GPIO)')" class="rounded-lg bg-[#111318] border border-[#22252C] p-2 flex flex-col items-center cursor-zoom-in hover:border-sky-400/50 transition-colors">
+                <img data-asset="photo_2026-11-25_19-57-04.jpg" src="photo_2026-11-25_19-57-04.jpg" alt="SB ELIO Bottom V0.1 CAM & Pinout" class="h-56 object-contain" />
+                <span class="mt-2 font-mono text-[10px] text-[#8E96A4]">BOTTOM V0.1 (CAM + SWD)</span>
+              </div>
+            </div>
+            <div class="p-4 border-t border-[#22252C] flex flex-wrap items-center justify-between gap-2 font-mono text-xs">
+              <span class="text-[#E8ECF2]">BOTTOM SILKSCREEN: Dual CSI/CAM Ribbon Connectors · SWCLK/SWDIO · E01–E42 / R22–R47</span>
+              <span class="text-sky-400">4-LAYER IMPEDANCE CONTROLLED</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right 5 Cols: Engineering Specifications Matrix -->
+        <div class="lg:col-span-5 rounded-xl bg-[#111318] border border-[#22252C] overflow-hidden">
+          <div class="px-4 py-3 bg-[#181B22] border-b border-[#22252C] flex items-center justify-between">
+            <span class="font-mono text-xs font-semibold text-[#E8ECF2]">SB ELIO v0.2 KEY SPECIFICATIONS</span>
+            <span class="font-mono text-[11px] text-sky-400">DUAL-MCU</span>
+          </div>
+
+          <div class="divide-y divide-[#22252C] text-xs">
+            <div class="p-3.5 grid grid-cols-3 gap-2">
+              <span class="font-mono text-[#8E96A4]">Architecture</span>
+              <span class="col-span-2 text-[#E8ECF2] font-medium">Dual-MCU (ESP32-S3 + RP2350B)</span>
+            </div>
+            <div class="p-3.5 grid grid-cols-3 gap-2">
+              <span class="font-mono text-[#8E96A4]">ESP32-S3</span>
+              <span class="col-span-2 text-[#E8ECF2]">Dual-core Xtensa LX7 up to 240 MHz · Wireless AI &amp; Telemetry</span>
+            </div>
+            <div class="p-3.5 grid grid-cols-3 gap-2">
+              <span class="font-mono text-[#8E96A4]">RP2350B</span>
+              <span class="col-span-2 text-[#E8ECF2]">Dual Arm Cortex-M33, 520 KB SRAM, 12 PIO state machines, USB 1.1, HDMI display support</span>
+            </div>
+            <div class="p-3.5 grid grid-cols-3 gap-2">
+              <span class="font-mono text-[#8E96A4]">Memory</span>
+              <span class="col-span-2 text-[#E8ECF2]">8 MB Flash + 8 MB PSRAM (ESP32-S3-WROOM-1 module)</span>
+            </div>
+            <div class="p-3.5 grid grid-cols-3 gap-2">
+              <span class="font-mono text-[#8E96A4]">Wireless</span>
+              <span class="col-span-2 text-[#E8ECF2]">Wi-Fi 802.11 b/g/n (2.4 GHz), Bluetooth 5 LE</span>
+            </div>
+            <div class="p-3.5 grid grid-cols-3 gap-2">
+              <span class="font-mono text-[#8E96A4]">USB &amp; Buttons</span>
+              <span class="col-span-2 text-[#E8ECF2]">2 × USB-C (ESP_USB &amp; RP_USB), BOOT (ESP32), BOOT (RP2350), RESET, User RGB LED</span>
+            </div>
+            <div class="p-3.5 grid grid-cols-3 gap-2">
+              <span class="font-mono text-[#8E96A4]">GPIO &amp; Vision</span>
+              <span class="col-span-2 text-[#E8ECF2]">Up to 48 GPIO (2 × 20 2.54 mm headers), Dual CAM ribbon ports, UART/SPI/I2C/ADC/DAC/PWM/PIO</span>
+            </div>
+            <div class="p-3.5 grid grid-cols-3 gap-2">
+              <span class="font-mono text-[#8E96A4]">Dimensions</span>
+              <span class="col-span-2 font-mono text-sky-400">≈ 51.0 mm × 21.0 mm × ~6.8 mm (4-layer PCB + Base Plate)</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Spaceborn Vehicle & Hardware Pairing Strip -->
+      <div class="mt-10 pt-8 border-t border-[#22252C]">
+        <div class="font-mono text-xs text-[#8E96A4] uppercase tracking-wider mb-4">
+          Spaceborn Hardware Pairing Matrix in ANSA Studio
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <div class="p-4 rounded-xl bg-[#111318] border border-[#22252C]">
+            <div class="font-mono text-[10px] text-sky-400">ELARA + ARIA</div>
+            <div class="font-display font-semibold text-sm text-[#E8ECF2] mt-1">UAV / Drones</div>
+            <p class="text-xs text-[#8E96A4] mt-1">Deterministic ArduCopter/Plane flight loop with ARIA optical perception.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-[#111318] border border-[#22252C]">
+            <div class="font-mono text-[10px] text-amber-400">ELIO + HPU</div>
+            <div class="font-display font-semibold text-sm text-[#E8ECF2] mt-1">Ground Vehicles</div>
+            <p class="text-xs text-[#8E96A4] mt-1">ArduRover skid-steer &amp; Ackermann kinematics bridged over PIO/CAN.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-[#111318] border border-[#22252C]">
+            <div class="font-mono text-[10px] text-emerald-400">DUAL HPU</div>
+            <div class="font-display font-semibold text-sm text-[#E8ECF2] mt-1">Humanoid Robots</div>
+            <p class="text-xs text-[#8E96A4] mt-1">High-frequency whole-body torque control &amp; RoboBench policy evaluation.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-[#111318] border border-[#22252C]">
+            <div class="font-mono text-[10px] text-purple-400">ELIO CORE</div>
+            <div class="font-display font-semibold text-sm text-[#E8ECF2] mt-1">Industrial Robotics</div>
+            <p class="text-xs text-[#8E96A4] mt-1">12-state-machine RP2350B deterministic encoder &amp; actuator synchronization.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-[#111318] border border-[#22252C]">
+            <div class="font-mono text-[10px] text-[#8E96A4]">FULL STACK</div>
+            <div class="font-display font-semibold text-sm text-[#E8ECF2] mt-1">Custom Machines</div>
+            <p class="text-xs text-[#8E96A4] mt-1">Modular MAVLink telemetry bridge + custom PCB pinmux generation.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- PROJECT MEDIA CONTACT SHEET & LOCAL DEMO VIDEO PLAYER                 -->
+  <!-- ===================================================================== -->
+  <section id="media-gallery" class="py-16 lg:py-24 border-b border-[#22252C]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+        <div>
+          <div class="font-mono text-xs text-sky-400 uppercase tracking-wider mb-1.5">
+            04 // VISUAL ARCHIVE &amp; DEMO REEL
+          </div>
+          <h2 class="font-display font-bold text-2xl sm:text-3xl text-[#E8ECF2]">
+            ANSA Studio &amp; SB ELIO Engineering Media
+          </h2>
+          <p class="text-sm text-[#8E96A4] mt-1 max-w-2xl">
+            All 10 hardware renders, architectural diagrams, and studio interfaces from your project folder. Click any frame to inspect in full resolution, or load local <code class="font-mono text-xs text-sky-400">.mp4 / .webm</code> demo recordings into the cinema viewport below.
+          </p>
+        </div>
+
+        <button onclick="openMediaUploadModal()" class="self-start md:self-auto px-4 py-2.5 rounded-lg bg-[#181B22] hover:bg-[#22252C] border border-[#22252C] text-[#E8ECF2] font-mono text-xs transition-colors">
+          + Load Local Video / Replace Image
+        </button>
+      </div>
+
+      <!-- Optional Cinema Video Frame (Populates when user loads a local .mp4/.webm file) -->
+      <div id="video-cinema-container" class="hidden mb-8 rounded-xl bg-[#111318] border border-sky-400/40 overflow-hidden shadow-2xl">
+        <div class="px-4 py-2.5 bg-[#181B22] border-b border-[#22252C] flex items-center justify-between font-mono text-xs">
+          <span id="video-cinema-title" class="text-sky-400">DEMO REEL PLAYBACK</span>
+          <button onclick="closeVideoCinema()" class="text-[#8E96A4] hover:text-[#E8ECF2]">REMOVE VIDEO</button>
+        </div>
+        <div class="bg-black aspect-video max-h-[540px] flex items-center justify-center">
+          <video id="demo-video-player" controls playsinline class="w-full h-full object-contain"></video>
+        </div>
+      </div>
+
+      <!-- 10-Asset Complete Engineering Contact Sheet -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4" id="media-contact-sheet">
+        
+        <div onclick="openLightbox('photo_2026-11-25_19-57-20.jpg', '01 / ANSA Studio Desktop UI — ELARA + HPU + ELIO')" class="group rounded-xl bg-[#111318] border border-[#22252C] hover:border-sky-400/50 overflow-hidden cursor-zoom-in transition-all">
+          <div class="aspect-[16/10] bg-[#090A0D] overflow-hidden">
+            <img data-asset="photo_2026-11-25_19-57-20.jpg" src="photo_2026-11-25_19-57-20.jpg" alt="ANSA Studio Desktop" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          </div>
+          <div class="p-3">
+            <div class="font-mono text-[10px] text-sky-400">FIG 01 · WORKSPACE</div>
+            <div class="text-xs font-medium text-[#E8ECF2] mt-0.5 truncate">ANSA Studio Desktop UI</div>
+          </div>
+        </div>
+
+        <div onclick="openLightbox('photo_2026-11-25_19-57-10.jpg', '02 / ANSA Studio Mobile Field Companion')" class="group rounded-xl bg-[#111318] border border-[#22252C] hover:border-sky-400/50 overflow-hidden cursor-zoom-in transition-all">
+          <div class="aspect-[16/10] bg-[#090A0D] overflow-hidden">
+            <img data-asset="photo_2026-11-25_19-57-10.jpg" src="photo_2026-11-25_19-57-10.jpg" alt="ANSA Studio Mobile" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          </div>
+          <div class="p-3">
+            <div class="font-mono text-[10px] text-sky-400">FIG 02 · MOBILE GCS</div>
+            <div class="text-xs font-medium text-[#E8ECF2] mt-0.5 truncate">Mobile Field Companion</div>
+          </div>
+        </div>
+
+        <div onclick="openLightbox('photo_2026-11-25_19-57-17.jpg', '03 / All in One — ANSA Studio 7-Pillar Architecture')" class="group rounded-xl bg-[#111318] border border-[#22252C] hover:border-sky-400/50 overflow-hidden cursor-zoom-in transition-all">
+          <div class="aspect-[16/10] bg-white overflow-hidden">
+            <img data-asset="photo_2026-11-25_19-57-17.jpg" src="photo_2026-11-25_19-57-17.jpg" alt="ANSA Architecture Diagram" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+          </div>
+          <div class="p-3">
+            <div class="font-mono text-[10px] text-sky-400">FIG 03 · TOPOLOGY</div>
+            <div class="text-xs font-medium text-[#E8ECF2] mt-0.5 truncate">7-Pillar Architecture</div>
+          </div>
+        </div>
+
+        <div onclick="openLightbox('photo_2026-11-25_19-57-07.jpg', '04 / SB ELIO v0.2 Exploded 3D Hardware Assembly')" class="group rounded-xl bg-[#111318] border border-[#22252C] hover:border-sky-400/50 overflow-hidden cursor-zoom-in transition-all">
+          <div class="aspect-[16/10] bg-[#050608] overflow-hidden">
+            <img data-asset="photo_2026-11-25_19-57-07.jpg" src="photo_2026-11-25_19-57-07.jpg" alt="SB ELIO Exploded 3D" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+          </div>
+          <div class="p-3">
+            <div class="font-mono text-[10px] text-amber-400">FIG 04 · HARDWARE</div>
+            <div class="text-xs font-medium text-[#E8ECF2] mt-0.5 truncate">SB ELIO Exploded 3D</div>
+          </div>
+        </div>
+
+        <div onclick="openLightbox('photo_2026-11-25_19-57-15.jpg', '05 / SB ELIO v0.2 Wireframe Spec Sheet & Dimensions')" class="group rounded-xl bg-[#111318] border border-[#22252C] hover:border-sky-400/50 overflow-hidden cursor-zoom-in transition-all">
+          <div class="aspect-[16/10] bg-white overflow-hidden">
+            <img data-asset="photo_2026-11-25_19-57-15.jpg" src="photo_2026-11-25_19-57-15.jpg" alt="SB ELIO Wireframe Datasheet" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+          </div>
+          <div class="p-3">
+            <div class="font-mono text-[10px] text-amber-400">FIG 05 · DATASHEET</div>
+            <div class="text-xs font-medium text-[#E8ECF2] mt-0.5 truncate">Wireframe Spec Sheet</div>
+          </div>
+        </div>
+
+        <div onclick="openLightbox('photo_2026-11-25_19-57-12.jpg', '06 / SB ELIO v0.2 Full-Color Hardware Spec Sheet')" class="group rounded-xl bg-[#111318] border border-[#22252C] hover:border-sky-400/50 overflow-hidden cursor-zoom-in transition-all">
+          <div class="aspect-[16/10] bg-white overflow-hidden">
+            <img data-asset="photo_2026-11-25_19-57-12.jpg" src="photo_2026-11-25_19-57-12.jpg" alt="SB ELIO Full Color Spec Sheet" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+          </div>
+          <div class="p-3">
+            <div class="font-mono text-[10px] text-amber-400">FIG 06 · DATASHEET</div>
+            <div class="text-xs font-medium text-[#E8ECF2] mt-0.5 truncate">Full-Render Spec Sheet</div>
+          </div>
+        </div>
+
+        <div onclick="openLightbox('photo_2026-11-25_19-57-14.jpg', '07 / Dual MCU AI Development Board Callouts')" class="group rounded-xl bg-[#111318] border border-[#22252C] hover:border-sky-400/50 overflow-hidden cursor-zoom-in transition-all">
+          <div class="aspect-[16/10] bg-white overflow-hidden">
+            <img data-asset="photo_2026-11-25_19-57-14.jpg" src="photo_2026-11-25_19-57-14.jpg" alt="Dual MCU Callouts" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+          </div>
+          <div class="p-3">
+            <div class="font-mono text-[10px] text-emerald-400">FIG 07 · PINOUTS</div>
+            <div class="text-xs font-medium text-[#E8ECF2] mt-0.5 truncate">Dual-MCU Callouts</div>
+          </div>
+        </div>
+
+        <div onclick="openLightbox('photo_2026-11-25_19-57-18.jpg', '08 / SB ELIO Isometric 3D CAD Render')" class="group rounded-xl bg-[#111318] border border-[#22252C] hover:border-sky-400/50 overflow-hidden cursor-zoom-in transition-all">
+          <div class="aspect-[16/10] bg-[#EFEFEF] overflow-hidden">
+            <img data-asset="photo_2026-11-25_19-57-18.jpg" src="photo_2026-11-25_19-57-18.jpg" alt="SB ELIO Isometric CAD" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+          </div>
+          <div class="p-3">
+            <div class="font-mono text-[10px] text-emerald-400">FIG 08 · CAD 3D</div>
+            <div class="text-xs font-medium text-[#E8ECF2] mt-0.5 truncate">Isometric PCB Render</div>
+          </div>
+        </div>
+
+        <div onclick="openLightbox('photo_2026-11-25_19-57-09.jpg', '09 / SB ELIO Top PCB Routing (ESP_USB & RP_USB)')" class="group rounded-xl bg-[#111318] border border-[#22252C] hover:border-sky-400/50 overflow-hidden cursor-zoom-in transition-all">
+          <div class="aspect-[16/10] bg-[#090A0D] overflow-hidden">
+            <img data-asset="photo_2026-11-25_19-57-09.jpg" src="photo_2026-11-25_19-57-09.jpg" alt="SB ELIO Top PCB" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+          </div>
+          <div class="p-3">
+            <div class="font-mono text-[10px] text-emerald-400">FIG 09 · PCB TOP</div>
+            <div class="text-xs font-medium text-[#E8ECF2] mt-0.5 truncate">Top Layer &amp; Dual USB-C</div>
+          </div>
+        </div>
+
+        <div onclick="openLightbox('photo_2026-11-25_19-57-04.jpg', '10 / SB ELIO V0.1 Bottom Silkscreen (CAM & SWD)')" class="group rounded-xl bg-[#111318] border border-[#22252C] hover:border-sky-400/50 overflow-hidden cursor-zoom-in transition-all">
+          <div class="aspect-[16/10] bg-[#090A0D] overflow-hidden">
+            <img data-asset="photo_2026-11-25_19-57-04.jpg" src="photo_2026-11-25_19-57-04.jpg" alt="SB ELIO Bottom PCB" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+          </div>
+          <div class="p-3">
+            <div class="font-mono text-[10px] text-emerald-400">FIG 10 · PCB BOTTOM</div>
+            <div class="text-xs font-medium text-[#E8ECF2] mt-0.5 truncate">Bottom V0.1 CAM &amp; SWD</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- EVOLUTION & RELEASE TRACK (ANSA v0.01 -> v0.3)                        -->
+  <!-- ===================================================================== -->
+  <section id="release-track" class="py-16 lg:py-20 border-b border-[#22252C] bg-[#0B0C10]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="mb-8">
+        <div class="font-mono text-xs text-sky-400 uppercase tracking-wider mb-1.5">
+          05 // ENGINEERING CHANGELOG
+        </div>
+        <h2 class="font-display font-bold text-2xl sm:text-3xl text-[#E8ECF2]">
+          ANSA OS Release Progression
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- v0.01 -->
+        <div class="p-5 rounded-xl bg-[#111318] border border-[#22252C] flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between font-mono text-xs mb-3">
+              <span class="px-2 py-0.5 rounded bg-[#181B22] text-[#8E96A4] border border-[#22252C]">ANSA v0.01</span>
+              <span class="text-[#8E96A4]">FOUNDATION</span>
+            </div>
+            <h3 class="font-display font-semibold text-base text-[#E8ECF2]">Kernel &amp; MAVLink Bridge</h3>
+            <p class="text-xs text-[#8E96A4] mt-2 leading-relaxed">
+              Initial real-time UART/SPI transport daemon, zero-copy MAVLink 2.0 packet framing, and deterministic scheduler primitives for ArduPilot flight controllers.
+            </p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-[#22252C] font-mono text-[11px] text-[#8E96A4]">
+            STATUS: ARCHIVED
+          </div>
+        </div>
+
+        <!-- v0.1 -->
+        <div class="p-5 rounded-xl bg-[#111318] border border-[#22252C] flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between font-mono text-xs mb-3">
+              <span class="px-2 py-0.5 rounded bg-[#181B22] text-[#8E96A4] border border-[#22252C]">ANSA v0.1</span>
+              <span class="text-[#8E96A4]">SIMULATION</span>
+            </div>
+            <h3 class="font-display font-semibold text-base text-[#E8ECF2]">Native SITL &amp; RoboBench</h3>
+            <p class="text-xs text-[#8E96A4] mt-2 leading-relaxed">
+              Integrated ArduPilot SITL physics coupling, headless scenario replay, and automated mission waypoint regression testing inside RoboBench.
+            </p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-[#22252C] font-mono text-[11px] text-[#8E96A4]">
+            STATUS: STABLE LTS
+          </div>
+        </div>
+
+        <!-- v0.2 -->
+        <div class="p-5 rounded-xl bg-[#111318] border border-[#22252C] flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between font-mono text-xs mb-3">
+              <span class="px-2 py-0.5 rounded bg-[#181B22] text-amber-400 border border-amber-400/30">ANSA v0.2</span>
+              <span class="text-amber-400">SILICON</span>
+            </div>
+            <h3 class="font-display font-semibold text-base text-[#E8ECF2]">SB ELIO v0.2 Target Support</h3>
+            <p class="text-xs text-[#8E96A4] mt-2 leading-relaxed">
+              Full board support package for SB ELIO dual-MCU (ESP32-S3 + RP2350B), PIO PWM/DShot drivers, and dual USB-C debug/telemetry multiplexing.
+            </p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-[#22252C] font-mono text-[11px] text-[#8E96A4]">
+            STATUS: HARDWARE REV v0.2
+          </div>
+        </div>
+
+        <!-- v0.3 -->
+        <div class="p-5 rounded-xl bg-[#181B22] border border-sky-400/50 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between font-mono text-xs mb-3">
+              <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-400/40">ANSA v0.3</span>
+              <span class="text-emerald-400">CURRENT</span>
+            </div>
+            <h3 class="font-display font-semibold text-base text-[#E8ECF2]">ANSA Studio &amp; Certainty</h3>
+            <p class="text-xs text-[#8E96A4] mt-2 leading-relaxed">
+              Unified desktop &amp; mobile mission planner, ANSA Collaborator AI hardware matching, and pre-flight Certainty validation across ELARA, HPU, ELIO, and ARIA.
+            </p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-[#22252C] font-mono text-[11px] text-sky-400">
+            STATUS: ACTIVE RELEASE
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- INTERACTIVE MODAL 3: FULLSCREEN LIGHTBOX INSPECTOR                    -->
+  <!-- ===================================================================== -->
+  <div id="lightbox-modal" onclick="closeLightbox()" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/90 backdrop-blur-md p-4">
+    <div onclick="event.stopPropagation()" class="w-full max-w-5xl rounded-2xl bg-[#111318] border border-[#22252C] overflow-hidden shadow-2xl panel-fade">
+      <div class="px-5 py-3.5 bg-[#181B22] border-b border-[#22252C] flex items-center justify-between gap-4">
+        <span id="lightbox-caption" class="font-mono text-xs text-[#E8ECF2] truncate">INSPECTING ASSET</span>
+        <button onclick="closeLightbox()" class="text-[#8E96A4] hover:text-[#E8ECF2] font-mono text-xs px-2.5 py-1 rounded bg-[#090A0D] border border-[#22252C]">ESC / CLOSE</button>
+      </div>
+      <div class="bg-[#090A0D] max-h-[78vh] flex items-center justify-center p-4">
+        <img id="lightbox-img" src="" alt="Full Resolution Asset" class="max-h-[72vh] w-auto object-contain rounded" />
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- INTERACTIVE MODAL 4: LOCAL VIDEO & ASSET SLOT UPLOADER                -->
+  <!-- ===================================================================== -->
+  <div id="media-upload-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-xl rounded-2xl bg-[#111318] border border-[#22252C] overflow-hidden shadow-2xl panel-fade">
+      <div class="px-5 py-4 bg-[#181B22] border-b border-[#22252C] flex items-center justify-between">
+        <span class="font-display font-semibold text-sm text-[#E8ECF2]">Attach Demo Video (.mp4 / .webm) or Swap Asset</span>
+        <button onclick="closeMediaUploadModal()" class="text-[#8E96A4] hover:text-[#E8ECF2] font-mono text-xs px-2 py-1 rounded hover:bg-[#22252C]">CLOSE</button>
+      </div>
+      <div class="p-5 space-y-4">
+        <p class="text-xs text-[#8E96A4] leading-relaxed">
+          Select any local video recording from your Drive folder (e.g. ANSA Studio screen capture or ArduPilot SITL demo) to embed it directly into the page's demo reel, or replace an existing image slot.
+        </p>
+
+        <div class="space-y-2">
+          <label class="block font-mono text-[11px] text-[#8E96A4]">1. LOAD DEMO VIDEO (.MP4 / .WEBM / .MOV)</label>
+          <input type="file" accept="video/*" onchange="handleVideoUpload(event)" class="block w-full text-xs font-mono text-[#8E96A4] file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-sky-500 file:text-[#090A0D] hover:file:bg-sky-400 cursor-pointer bg-[#090A0D] border border-[#22252C] rounded-lg p-1.5" />
+        </div>
+
+        <div class="pt-3 border-t border-[#22252C] space-y-2">
+          <label class="block font-mono text-[11px] text-[#8E96A4]">2. OR REPLACE AN EXISTING IMAGE SLOT</label>
+          <select id="replace-slot-select" class="w-full bg-[#090A0D] border border-[#22252C] rounded-lg px-3 py-2 text-xs font-mono text-[#E8ECF2]">
+            <option value="photo_2026-11-25_19-57-20.jpg">FIG 01 — ANSA Studio Desktop UI</option>
+            <option value="photo_2026-11-25_19-57-10.jpg">FIG 02 — ANSA Studio Mobile UI</option>
+            <option value="photo_2026-11-25_19-57-17.jpg">FIG 03 — 7-Pillar Architecture Diagram</option>
+            <option value="photo_2026-11-25_19-57-07.jpg">FIG 04 — SB ELIO Exploded 3D Render</option>
+            <option value="photo_2026-11-25_19-57-15.jpg">FIG 05 — SB ELIO Wireframe Spec Sheet</option>
+            <option value="photo_2026-11-25_19-57-12.jpg">FIG 06 — SB ELIO Full-Color Spec Sheet</option>
+            <option value="photo_2026-11-25_19-57-14.jpg">FIG 07 — Dual-MCU Callout Overview</option>
+            <option value="photo_2026-11-25_19-57-18.jpg">FIG 08 — Isometric 3D PCB Render</option>
+            <option value="photo_2026-11-25_19-57-09.jpg">FIG 09 — Top PCB Layout</option>
+            <option value="photo_2026-11-25_19-57-04.jpg">FIG 10 — Bottom V0.1 PCB Silkscreen</option>
+          </select>
+          <input type="file" accept="image/*" onchange="handleImageReplace(event)" class="block w-full text-xs font-mono text-[#8E96A4] file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#181B22] file:text-[#E8ECF2] hover:file:bg-[#22252C] cursor-pointer bg-[#090A0D] border border-[#22252C] rounded-lg p-1.5" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- JAVASCRIPT APPLICATION LOGIC                                          -->
+  <!-- ===================================================================== -->
+  <script>
+    // -----------------------------------------------------------------------
+    // 1. HERO HOTSPOT INTERACTION
+    // -----------------------------------------------------------------------
+    const heroHotspots = {
+      collaborator: '<strong>ANSA Collaborator:</strong> Context-aware engineering copilot bound directly to your hardware target (ELARA, HPU, SB ELIO) and ArduPilot parameter tree.',
+      target: '<strong>Hardware Target Match (98%):</strong> Configured ELARA flight controller with HPU companion link and SB ELIO telemetry bridge. Verified for Certainty validation.',
+      robobench: '<strong>RoboBench Benchmark (64%):</strong> Real-time SITL stress simulation executing wind-shear, sensor dropout, and waypoint recovery scenarios.'
+    };
+
+    function selectHeroHotspot(key) {
+      document.querySelectorAll('.hotspot-btn').forEach(btn => {
+        if (btn.dataset.hotspot === key) {
+          btn.classList.add('bg-[#181B22]', 'border-sky-400/60');
+          btn.classList.remove('bg-[#111318]', 'border-[#22252C]');
+        } else {
+          btn.classList.remove('bg-[#181B22]', 'border-sky-400/60');
+          btn.classList.add('bg-[#111318]', 'border-[#22252C]');
+        }
+      });
+      document.getElementById('hero-hotspot-detail').innerHTML = heroHotspots[key];
+    }
+
+    // -----------------------------------------------------------------------
+    // 2. INTERACTIVE ARDUPILOT MISSION PLANNER & TELEMETRY SANDBOX
+    // -----------------------------------------------------------------------
+    const HOME_POS = { x: 110, y: 340 };
+    const BASE_LAT = 12.971600;
+    const BASE_LON = 77.594600;
+
+    let currentCmdMode = 'WAYPOINT';
+    let defaultAlt = 45;
+    let cruiseSpeed = 14;
+    let simRunning = false;
+    let simProgress = 0;
+    let simRafId = null;
+
+    // Initial default ArduPilot mission waypoints
+    let waypoints = [
+      { id: 1, cmd: 'TAKEOFF', x: 190, y: 270, alt: 45 },
+      { id: 2, cmd: 'WAYPOINT', x: 370, y: 145, alt: 45 },
+      { id: 3, cmd: 'LOITER_UNLIM', x: 585, y: 190, alt: 60 },
+      { id: 4, cmd: 'RTL', x: 650, y: 325, alt: 45 }
+    ];
+
+    const cmdColors = {
+      TAKEOFF: '#38BDF8',
+      WAYPOINT: '#38BDF8',
+      LOITER_UNLIM: '#F59E0B',
+      ROI: '#A855F7',
+      RTL: '#10B981'
+    };
+
+    const mavCmdIds = {
+      TAKEOFF: 22,
+      WAYPOINT: 16,
+      LOITER_UNLIM: 17,
+      ROI: 201,
+      RTL: 20
+    };
+
+    function setCommandMode(mode) {
+      currentCmdMode = mode;
+      document.querySelectorAll('.cmd-btn').forEach(btn => {
+        if (btn.id === 'cmd-' + mode) {
+          btn.className = 'cmd-btn px-2.5 py-1 rounded text-xs font-mono bg-sky-500/20 text-sky-300 border border-sky-400/50';
+        } else {
+          btn.className = 'cmd-btn px-2.5 py-1 rounded text-xs font-mono bg-[#111318] text-[#8E96A4] border border-[#22252C] hover:text-[#E8ECF2]';
+        }
+      });
+    }
+
+    function pixelToGeo(x, y) {
+      const lat = (BASE_LAT + (340 - y) * 0.000018).toFixed(6);
+      const lon = (BASE_LON + (x - 110) * 0.000018).toFixed(6);
+      return { lat, lon };
+    }
+
+    function renderMission() {
+      const polyline = document.getElementById('mission-polyline');
+      const wpLayer = document.getElementById('waypoints-layer');
+      const wpList = document.getElementById('waypoint-list');
+
+      // Build polyline path starting at HOME
+      const pts = [`${HOME_POS.x},${HOME_POS.y}`];
+      waypoints.forEach(wp => pts.push(`${wp.x},${wp.y}`));
+      polyline.setAttribute('points', pts.join(' '));
+
+      // Render SVG nodes
+      wpLayer.innerHTML = '';
+      waypoints.forEach((wp, idx) => {
+        const color = cmdColors[wp.cmd] || '#38BDF8';
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('transform', `translate(${wp.x}, ${wp.y})`);
+        g.style.cursor = 'pointer';
+
+        // Outer ring
+        const outer = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        outer.setAttribute('r', '13');
+        outer.setAttribute('fill', color);
+        outer.setAttribute('fill-opacity', '0.16');
+        outer.setAttribute('stroke', color);
+        outer.setAttribute('stroke-width', '1.4');
+
+        // Core dot
+        const inner = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        inner.setAttribute('r', '4');
+        inner.setAttribute('fill', color);
+
+        // Label
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('x', '16');
+        label.setAttribute('y', '4');
+        label.setAttribute('fill', '#E8ECF2');
+        label.setAttribute('font-family', 'JetBrains Mono');
+        label.setAttribute('font-size', '10');
+        label.textContent = `${idx + 1}: ${wp.cmd} (${wp.alt}m)`;
+
+        g.appendChild(outer);
+        g.appendChild(inner);
+        g.appendChild(label);
+
+        // Clicking an existing waypoint removes it (if >1 waypoints)
+        g.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (waypoints.length > 1) {
+            waypoints.splice(idx, 1);
+            renderMission();
+          }
+        });
+
+        wpLayer.appendChild(g);
+      });
+
+      // Render right-hand queue list
+      wpList.innerHTML = waypoints.map((wp, idx) => {
+        const geo = pixelToGeo(wp.x, wp.y);
+        return `
+          <div class="flex items-center justify-between px-2.5 py-1.5 rounded bg-[#090A0D] border border-[#22252C]">
+            <div>
+              <span class="text-sky-400">#${idx + 1}</span>
+              <span class="text-[#E8ECF2] ml-1">${wp.cmd}</span>
+              <span class="text-[#8E96A4] ml-1">${wp.alt}m</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] text-[#8E96A4]">${geo.lat}, ${geo.lon}</span>
+              <button onclick="deleteWaypoint(${idx})" class="text-rose-400 hover:text-rose-300 px-1" title="Remove">×</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('wp-count-label').textContent = `${waypoints.length} ITEMS`;
+      updateTelemetrySummary();
+    }
+
+    function deleteWaypoint(idx) {
+      if (waypoints.length > 1) {
+        waypoints.splice(idx, 1);
+        renderMission();
+      }
+    }
+
+    function updateTelemetrySummary() {
+      // Calculate total pixel path distance -> scaled meters
+      let totalPx = 0;
+      let prev = HOME_POS;
+      waypoints.forEach(wp => {
+        totalPx += Math.hypot(wp.x - prev.x, wp.y - prev.y);
+        prev = wp;
+      });
+      const distMeters = Math.round(totalPx * 1.45);
+      const etaSec = Math.max(1, Math.round(distMeters / cruiseSpeed));
+
+      document.getElementById('telem-dist').textContent = `DIST: ${distMeters} m`;
+      document.getElementById('telem-eta').textContent = `ETA: ${etaSec} s`;
+      document.getElementById('telem-wp').textContent = `SEQ 1 / ${waypoints.length}`;
+    }
+
+    // SVG click to append waypoint
+    const missionSvg = document.getElementById('mission-svg');
+    missionSvg.addEventListener('click', (e) => {
+      const rect = missionSvg.getBoundingClientRect();
+      const scaleX = 800 / rect.width;
+      const scaleY = 440 / rect.height;
+      const x = Math.round((e.clientX - rect.left) * scaleX);
+      const y = Math.round((e.clientY - rect.top) * scaleY);
+
+      waypoints.push({
+        id: waypoints.length + 1,
+        cmd: currentCmdMode,
+        x: Math.max(40, Math.min(760, x)),
+        y: Math.max(40, Math.min(400, y)),
+        alt: defaultAlt
+      });
+      renderMission();
+    });
+
+    missionSvg.addEventListener('mousemove', (e) => {
+      const rect = missionSvg.getBoundingClientRect();
+      const x = Math.round((e.clientX - rect.left) * (800 / rect.width));
+      const y = Math.round((e.clientY - rect.top) * (440 / rect.height));
+      const geo = pixelToGeo(x, y);
+      document.getElementById('cursor-coords').textContent = `${geo.lat}° N, ${geo.lon}° E`;
+    });
+
+    function updateMissionParams() {
+      defaultAlt = parseInt(document.getElementById('alt-slider').value, 10);
+      cruiseSpeed = parseInt(document.getElementById('spd-slider').value, 10);
+      document.getElementById('alt-readout').textContent = `${defaultAlt} m`;
+      document.getElementById('spd-readout').textContent = `${cruiseSpeed.toFixed(1)} m/s`;
+      waypoints = waypoints.map(wp => ({ ...wp, alt: defaultAlt }));
+      renderMission();
+    }
+
+    function changeVehicleProfile() {
+      const profile = document.getElementById('vehicle-profile').value;
+      const modeBadge = document.getElementById('telem-mode-badge');
+      const gpsText = document.getElementById('telem-gps');
+      const battText = document.getElementById('telem-batt');
+
+      if (profile === 'uav') {
+        modeBadge.textContent = 'GUIDED / AUTO';
+        gpsText.textContent = '3D RTK · 18 SAT';
+        battText.textContent = '24.8 V · 94%';
+        document.getElementById('alt-slider').value = 45;
+        document.getElementById('spd-slider').value = 14;
+      } else if (profile === 'rover') {
+        modeBadge.textContent = 'ROVER / AUTO';
+        gpsText.textContent = 'RTK FIX · 21 SAT';
+        battText.textContent = '48.2 V · 91%';
+        document.getElementById('alt-slider').value = 0;
+        document.getElementById('spd-slider').value = 4;
+      } else {
+        modeBadge.textContent = 'CUSTOM / MAV2';
+        gpsText.textContent = 'VIO + GNSS · LOCK';
+        battText.textContent = '16.4 V · 97%';
+        document.getElementById('alt-slider').value = 25;
+        document.getElementById('spd-slider').value = 8;
+      }
+      updateMissionParams();
+      runCertaintyCheck();
+    }
+
+    function resetMission() {
+      waypoints = [
+        { id: 1, cmd: 'TAKEOFF', x: 190, y: 270, alt: defaultAlt },
+        { id: 2, cmd: 'WAYPOINT', x: 370, y: 145, alt: defaultAlt },
+        { id: 3, cmd: 'LOITER_UNLIM', x: 585, y: 190, alt: defaultAlt },
+        { id: 4, cmd: 'RTL', x: 650, y: 325, alt: defaultAlt }
+      ];
+      simProgress = 0;
+      document.getElementById('vehicle-marker').setAttribute('transform', `translate(${HOME_POS.x}, ${HOME_POS.y})`);
+      renderMission();
+    }
+
+    // Animated SITL Flight Simulation along Waypoints
+    function toggleSimulationFlight() {
+      const btn = document.getElementById('sim-toggle-btn');
+      simRunning = !simRunning;
+      if (simRunning) {
+        btn.textContent = '❚❚ Pause SITL';
+        animateVehicle();
+      } else {
+        btn.textContent = '▶ Simulate Path';
+        cancelAnimationFrame(simRafId);
+      }
+    }
+
+    function animateVehicle() {
+      if (!simRunning) return;
+      const nodes = [HOME_POS, ...waypoints];
+      if (nodes.length < 2) return;
+
+      simProgress += 0.0045 * (cruiseSpeed / 10);
+      if (simProgress >= nodes.length - 1) simProgress = 0;
+
+      const segIdx = Math.floor(simProgress);
+      const t = simProgress - segIdx;
+      const p1 = nodes[segIdx];
+      const p2 = nodes[Math.min(segIdx + 1, nodes.length - 1)];
+
+      const vx = p1.x + (p2.x - p1.x) * t;
+      const vy = p1.y + (p2.y - p1.y) * t;
+      const angle = (Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI) + 90;
+
+      document.getElementById('vehicle-marker').setAttribute('transform', `translate(${vx.toFixed(1)}, ${vy.toFixed(1)}) rotate(${angle.toFixed(1)})`);
+      document.getElementById('telem-wp').textContent = `SEQ ${Math.min(segIdx + 1, waypoints.length)} / ${waypoints.length}`;
+
+      const roll = (Math.sin(simProgress * 5) * 4.2).toFixed(1);
+      const pitch = (-1.5 + Math.cos(simProgress * 3) * 1.1).toFixed(1);
+      const yaw = ((Math.round(angle) + 360) % 360);
+      document.getElementById('telem-attitude').textContent = `${roll >= 0 ? '+' : ''}${roll}° / ${pitch}° / ${yaw}°`;
+
+      simRafId = requestAnimationFrame(animateVehicle);
+    }
+
+    // Certainty SITL Safety Validator
+    function runCertaintyCheck() {
+      const badge = document.getElementById('certainty-score');
+      const log = document.getElementById('certainty-log');
+      const maxAlt = Math.max(...waypoints.map(w => w.alt));
+      const outOfBounds = waypoints.some(w => w.x < 36 || w.x > 764 || w.y < 32 || w.y > 408);
+
+      if (maxAlt > 120 || outOfBounds) {
+        badge.className = 'font-mono text-xs px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30';
+        badge.textContent = 'WARN · 78%';
+        log.innerHTML = `
+          <div class="text-amber-400">⚠ Altitude (${maxAlt}m) or waypoint exceeds 120m geofence ceiling</div>
+          <div class="text-emerald-400">✓ MAVLink heartbeat latency &lt; 4.2ms on ELIO UART</div>
+          <div class="text-[#8E96A4]">• Lower altitude slider &le; 120m to clear Certainty gate</div>
+        `;
+      } else {
+        badge.className = 'font-mono text-xs px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30';
+        badge.textContent = 'PASS · 98%';
+        log.innerHTML = `
+          <div class="text-emerald-400">✓ Geofence polygon check passed (max alt ${maxAlt}m &le; 120m)</div>
+          <div class="text-emerald-400">✓ MAVLink heartbeat latency &lt; 4.2ms on ELIO UART</div>
+          <div class="text-sky-400">• Ready for HIL / Field deployment</div>
+        `;
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // 3. 7-PILLAR ANSA STUDIO ARCHITECTURE INSPECTOR
+    // -----------------------------------------------------------------------
+    const pillarData = {
+      software: {
+        title: 'Software — Develop · Build · Deploy',
+        tag: 'ARDUPILOT / LUA / C++',
+        desc: 'Compiles custom ArduPilot firmware targets, Lua flight scripts, and companion ROS2/MAVLink nodes directly inside ANSA Studio with deterministic dependency pinning and one-click OTA/USB flashing.',
+        cli: '$ ansa build --target sb-elio-v0.2 --stack ardupilot-4.5 --verify certainty'
+      },
+      simulations: {
+        title: 'Simulations — SITL · Digital Twin · Scenario',
+        tag: 'SITL / DIGITAL TWIN',
+        desc: 'Spawns bit-accurate ArduPilot SITL instances coupled to high-rate aerodynamic and rover terrain physics, enabling automated Monte Carlo wind and sensor fault injection.',
+        cli: '$ ansa sim launch --vehicle quad-elara --scenario crosswind-18kt --headless'
+      },
+      ai: {
+        title: 'AI — Models · Autonomy · Reasoning',
+        tag: 'ESP32-S3 / HPU EDGE AI',
+        desc: 'Deploys quantized vision-language navigation, obstacle avoidance, and ANSA Collaborator mission reasoning directly onto ESP32-S3 neural extensions and Spaceborn HPU accelerators.',
+        cli: '$ ansa ai deploy --model aria-nav-v2.int8 --target elio-esp32s3'
+      },
+      testing: {
+        title: 'Real-World Testing — Hardware-in-Loop · Field · Validation',
+        tag: 'HIL / FIELD TELEMETRY',
+        desc: 'Bridges physical SB ELIO and ELARA flight controllers into closed-loop HIL rigs before field launch, logging synchronized MAVLink + IMU blackbox traces at 1 kHz.',
+        cli: '$ ansa hil attach --port /dev/ttyACM0 --board sb-elio-v0.2 --record'
+      },
+      workspace: {
+        title: 'Unified Workspace — Plan · Develop · Simulate · Test · Deploy',
+        tag: 'ALL-IN-ONE GCS',
+        desc: 'Replaces separate mission planners, serial monitors, parameter editors, and log analyzers with a single synchronized workspace shared across desktop and mobile field units.',
+        cli: '$ ansa studio open ./missions/blr-corridor-survey.ansa'
+      },
+      virtualization: {
+        title: 'Virtualization — Sim-to-Real · HIL · System',
+        tag: 'HAL ABSTRACTION',
+        desc: 'Hardware Abstraction Layer mirrors exact RP2350B PIO state machines, UART/SPI/I2C buses, and PWM outputs between virtual simulation and physical silicon.',
+        cli: '$ ansa hal map --bus inter-mcu-spi --verify-timing'
+      },
+      reality: {
+        title: 'Reality Engines — Perception · World Model · Emulation',
+        tag: 'SENSOR EMULATION',
+        desc: 'Synthesizes realistic CSI camera feeds, LiDAR point clouds, and RTK-GNSS multipath profiles to stress-test autonomy stacks prior to physical flight.',
+        cli: '$ ansa reality stream --sensor csi-cam0 --profile urban-canyon'
+      }
+    };
+
+    function selectPillar(key) {
+      document.querySelectorAll('.pillar-card').forEach(card => {
+        if (card.dataset.pillar === key) {
+          card.classList.add('bg-[#181B22]', 'border-sky-400/60');
+          card.classList.remove('bg-[#111318]', 'border-[#22252C]');
+        } else {
+          card.classList.remove('bg-[#181B22]', 'border-sky-400/60');
+          card.classList.add('bg-[#111318]', 'border-[#22252C]');
+        }
+      });
+
+      const d = pillarData[key];
+      document.getElementById('pillar-title').textContent = d.title;
+      document.getElementById('pillar-tag').textContent = d.tag;
+      document.getElementById('pillar-desc').textContent = d.desc;
+      document.getElementById('pillar-cli').textContent = d.cli;
+    }
+
+    // -----------------------------------------------------------------------
+    // 4. SB ELIO HARDWARE VIEW SWITCHER
+    // -----------------------------------------------------------------------
+    function switchHwView(viewKey) {
+      document.querySelectorAll('.hw-tab').forEach(tab => {
+        if (tab.dataset.hw === viewKey) {
+          tab.classList.add('bg-[#181B22]', 'text-[#E8ECF2]', 'border', 'border-sky-400/50');
+          tab.classList.remove('text-[#8E96A4]');
+        } else {
+          tab.classList.remove('bg-[#181B22]', 'text-[#E8ECF2]', 'border', 'border-sky-400/50');
+          tab.classList.add('text-[#8E96A4]');
+        }
+      });
+
+      document.querySelectorAll('.hw-view').forEach(panel => {
+        panel.classList.add('hidden');
+      });
+      document.getElementById('hw-view-' + viewKey).classList.remove('hidden');
+    }
+
+    // -----------------------------------------------------------------------
+    // 5. MODALS (ANSA STUDIO BOOTSTRAP & QGC WPL 110 EXPORT)
+    // -----------------------------------------------------------------------
+    function openStudioModal() {
+      updateStudioManifest();
+      const modal = document.getElementById('studio-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeStudioModal() {
+      const modal = document.getElementById('studio-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function updateStudioManifest() {
+      const hw = document.getElementById('modal-hw-select').value;
+      const fw = document.getElementById('modal-fw-select').value;
+      document.getElementById('studio-manifest-code').textContent =
+`# Spaceborn ANSA OS v0.3 Workspace Manifest
+project: autonomous-mission-alpha
+hardware_target: "${hw}"
+firmware_stack: "${fw}"
+inter_mcu_bus:
+  protocol: SPI_DMA + MAVLINK_2
+  baudrate: 921600
+certainty_validation:
+  geofence_max_alt_m: 120
+  sitl_precheck: required`;
+    }
+
+    function openWplModal() {
+      const lines = ['QGC WPL 110'];
+      // Index 0: Home
+      lines.push(`0\t1\t0\t16\t0\t0\t0\t0\t${BASE_LAT.toFixed(6)}\t${BASE_LON.toFixed(6)}\t0.00\t1`);
+      waypoints.forEach((wp, idx) => {
+        const geo = pixelToGeo(wp.x, wp.y);
+        const cmdNum = mavCmdIds[wp.cmd] || 16;
+        lines.push(`${idx + 1}\t0\t3\t${cmdNum}\t0.00\t0.00\t0.00\t0.00\t${geo.lat}\t${geo.lon}\t${wp.alt.toFixed(2)}\t1`);
+      });
+      document.getElementById('wpl-textarea').value = lines.join('\n');
+      document.getElementById('copy-feedback').textContent = '';
+
+      const modal = document.getElementById('wpl-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeWplModal() {
+      const modal = document.getElementById('wpl-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function copyWplToClipboard() {
+      const textarea = document.getElementById('wpl-textarea');
+      textarea.select();
+      textarea.setSelectionRange(0, 99999);
+      try {
+        document.execCommand('copy');
+        document.getElementById('copy-feedback').textContent = '✓ Copied QGC WPL 110 script to clipboard';
+      } catch (err) {
+        document.getElementById('copy-feedback').textContent = 'Press Ctrl+C / Cmd+C to copy';
+      }
+    }
+
+    // Close modals on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeStudioModal();
+        closeWplModal();
+        closeLightbox();
+        closeMediaUploadModal();
+      }
+    });
+
+    // -----------------------------------------------------------------------
+    // 6. LIGHTBOX & LOCAL VIDEO / IMAGE MEDIA LOADER
+    // -----------------------------------------------------------------------
+    function openLightbox(src, caption) {
+      // Check if asset was dynamically replaced in memory
+      const activeImg = document.querySelector(`img[data-asset="${src}"]`);
+      const resolvedSrc = activeImg ? activeImg.src : src;
+
+      document.getElementById('lightbox-img').src = resolvedSrc;
+      document.getElementById('lightbox-caption').textContent = caption;
+      const modal = document.getElementById('lightbox-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeLightbox() {
+      const modal = document.getElementById('lightbox-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function openMediaUploadModal() {
+      const modal = document.getElementById('media-upload-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeMediaUploadModal() {
+      const modal = document.getElementById('media-upload-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function handleVideoUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      const container = document.getElementById('video-cinema-container');
+      const player = document.getElementById('demo-video-player');
+      document.getElementById('video-cinema-title').textContent = `DEMO REEL · ${file.name.toUpperCase()}`;
+      player.src = url;
+      container.classList.remove('hidden');
+      closeMediaUploadModal();
+      container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      player.play().catch(() => {});
+    }
+
+    function closeVideoCinema() {
+      const container = document.getElementById('video-cinema-container');
+      const player = document.getElementById('demo-video-player');
+      player.pause();
+      player.removeAttribute('src');
+      container.classList.add('hidden');
+    }
+
+    function handleImageReplace(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const targetSlot = document.getElementById('replace-slot-select').value;
+      const url = URL.createObjectURL(file);
+      document.querySelectorAll(`img[data-asset="${targetSlot}"]`).forEach(img => {
+        img.src = url;
+      });
+      closeMediaUploadModal();
+    }
+
+    // Initialize interactive mission planner on load
+    window.addEventListener('DOMContentLoaded', () => {
+      renderMission();
+    });
+  </script>
+</body>
+</html>
