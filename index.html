@@ -219,9 +219,6 @@
   <section id="kernel-runtime" class="py-16 lg:py-24 border-b border-[#23262F] bg-[#0D0F13]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="max-w-3xl mb-10">
-        <div class="font-mono text-xs text-[#666D7A] uppercase tracking-wider mb-1.5">
-          Core Systems · ANSA Kernel &amp; Control
-        </div>
         <h2 class="font-display font-bold text-2xl sm:text-3xl text-[#ECEEF2]">
           Real-Time Drone Kernel &amp; FSM Runtime
         </h2>
@@ -239,11 +236,7 @@
             <img src="assets/kernel_test_3.jpg" alt="ANSA Drone Kernel Scheduler and Priority Report" class="w-full h-full object-cover group-hover:scale-[1.01] transition-transform duration-300" />
           </div>
           <div class="p-4 border-t border-[#23262F]">
-            <div class="flex items-center justify-between font-mono text-[11px] text-[#666D7A]">
-              <span>DRONE-KERNEL · SCHEDULER.C</span>
-              <span>800 TICKS</span>
-            </div>
-            <h3 class="font-display font-semibold text-base text-[#ECEEF2] mt-1">Kernel Task Scheduler &amp; Failsafe Trace</h3>
+            <h3 class="font-display font-semibold text-base text-[#ECEEF2]">Kernel Task Scheduler &amp; Failsafe Trace</h3>
             <p class="text-xs text-[#9BA1AE] mt-1 leading-relaxed">
               Live execution log from <code class="font-mono text-[#ECEEF2]">flight_fsm.c</code> and <code class="font-mono text-[#ECEEF2]">scheduler.c</code> showing sensor, PID, motor, and FSM task periods with priority accuracy metrics.
             </p>
@@ -256,11 +249,7 @@
             <img src="assets/fsm_mission_runtime.jpg" alt="ANSA FSM and Mission Runtime SITL Output" class="w-full h-full object-contain group-hover:scale-[1.01] transition-transform duration-300" />
           </div>
           <div class="p-4 border-t border-[#23262F]">
-            <div class="flex items-center justify-between font-mono text-[11px] text-[#666D7A]">
-              <span>FSM + MISSION RUNTIME</span>
-              <span>50 HZ · SITL PASS</span>
-            </div>
-            <h3 class="font-display font-semibold text-base text-[#ECEEF2] mt-1">State Machine &amp; Waypoint Execution</h3>
+            <h3 class="font-display font-semibold text-base text-[#ECEEF2]">State Machine &amp; Waypoint Execution</h3>
             <p class="text-xs text-[#9BA1AE] mt-1 leading-relaxed">
               Verifies guarded transitions (<code class="font-mono text-[#ECEEF2]">BOOT &rarr; IDLE &rarr; ARMING &rarr; TAKEOFF &rarr; HOVER &rarr; MISSION</code>) at 20,000 us ticks before hardware deployment.
             </p>
@@ -273,11 +262,7 @@
             <img src="assets/multi_drone.jpg" alt="ANSA Control Architecture Diagram" class="w-full h-full object-contain group-hover:scale-[1.01] transition-transform duration-300" />
           </div>
           <div class="p-4 border-t border-[#23262F]">
-            <div class="flex items-center justify-between font-mono text-[11px] text-[#666D7A]">
-              <span>CONTROL PIPELINE</span>
-              <span>SIM &amp; REAL</span>
-            </div>
-            <h3 class="font-display font-semibold text-base text-[#ECEEF2] mt-1">Kernel-to-ESC Control Loop</h3>
+            <h3 class="font-display font-semibold text-base text-[#ECEEF2]">Kernel-to-ESC Control Loop</h3>
             <p class="text-xs text-[#9BA1AE] mt-1 leading-relaxed">
               Routes FSM setpoints through Position Controller, Attitude Controller, and Mixer into either the Simulation Environment or the DShot Driver and physical ESC.
             </p>
@@ -290,11 +275,7 @@
             <img src="assets/setup_runtime.jpg" alt="STM32 Nucleo and Companion Board HIL Setup" class="w-full h-full object-cover group-hover:scale-[1.01] transition-transform duration-300" />
           </div>
           <div class="p-4 border-t border-[#23262F]">
-            <div class="flex items-center justify-between font-mono text-[11px] text-[#666D7A]">
-              <span>EXECUTION RUNTIME · HIL</span>
-              <span>STM32 NUCLEO</span>
-            </div>
-            <h3 class="font-display font-semibold text-base text-[#ECEEF2] mt-1">Board-Independent Runtime Bench</h3>
+            <h3 class="font-display font-semibold text-base text-[#ECEEF2]">Board-Independent Runtime Bench</h3>
             <p class="text-xs text-[#9BA1AE] mt-1 leading-relaxed">
               Physical test rig running the ANSA execution runtime across a companion compute board, STM32 breakout, and Nucleo-F446RE target.
             </p>
@@ -313,8 +294,7 @@
           <img src="assets/gcs_3d_render.png" alt="Spaceborn Ground Control Station 3D Map" class="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-300" />
         </div>
         <div class="lg:col-span-7 p-6 space-y-2">
-          <div class="font-mono text-[11px] text-[#666D7A] uppercase">Ground Control Station</div>
-          <h3 class="font-display font-semibold text-lg text-[#ECEEF2]">3D Hybrid Terrain &amp; Live Position View</h3>
+          <h3 class="font-display font-semibold text-lg text-[#ECEEF2]">Ground Control Station — 3D Hybrid Terrain View</h3>
           <p class="text-xs sm:text-sm text-[#9BA1AE] leading-relaxed">
             Satellite, hybrid, and street map layers with live latitude, longitude, and heading telemetry overlays for field operations.
           </p>
@@ -328,9 +308,6 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
       <div class="mb-10">
-        <div class="font-mono text-xs text-[#666D7A] uppercase tracking-wider mb-1.5">
-          Spaceborn Hardware
-        </div>
         <h2 class="font-display font-bold text-2xl sm:text-3xl text-[#ECEEF2]">
           Flight Controllers, Compute, ESC &amp; SB ELIO
         </h2>
@@ -346,8 +323,7 @@
             <img src="assets/elara_fc_front.jpg" alt="ELARA F7 6-Layer Flight Controller" class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300" />
           </div>
           <div class="p-4 border-t border-[#23262F]">
-            <div class="font-mono text-[10px] text-[#666D7A]">FLIGHT CONTROLLER</div>
-            <h3 class="font-display font-semibold text-base text-[#ECEEF2] mt-0.5">ELARA F7 (6-Layer)</h3>
+            <h3 class="font-display font-semibold text-base text-[#ECEEF2]">ELARA F7 (6-Layer)</h3>
             <p class="text-xs text-[#9BA1AE] mt-1">Primary flight controller with DJI, GPS, ESC, CAM, and USB-C interfaces.</p>
           </div>
         </div>
@@ -357,8 +333,7 @@
             <img src="assets/hpu_front.jpg" alt="Spaceborn HPU Front" class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300" />
           </div>
           <div class="p-4 border-t border-[#23262F]">
-            <div class="font-mono text-[10px] text-[#666D7A]">COMPANION COMPUTE</div>
-            <h3 class="font-display font-semibold text-base text-[#ECEEF2] mt-0.5">Spaceborn HPU</h3>
+            <h3 class="font-display font-semibold text-base text-[#ECEEF2]">Spaceborn HPU</h3>
             <p class="text-xs text-[#9BA1AE] mt-1">Onboard processing unit with quad FPC camera lanes, dual RJ45, and high-speed USB.</p>
           </div>
         </div>
@@ -368,8 +343,7 @@
             <img src="assets/aria_esc_50a.jpg" alt="ARIA ESC 50A" class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300" />
           </div>
           <div class="p-4 border-t border-[#23262F]">
-            <div class="font-mono text-[10px] text-[#666D7A]">POWER &amp; PROPULSION</div>
-            <h3 class="font-display font-semibold text-base text-[#ECEEF2] mt-0.5">ARIA 50A 4-in-1 ESC</h3>
+            <h3 class="font-display font-semibold text-base text-[#ECEEF2]">ARIA 50A 4-in-1 ESC</h3>
             <p class="text-xs text-[#9BA1AE] mt-1">50A 4-channel DShot ESC with integrated current sensing and telemetry output.</p>
           </div>
         </div>
@@ -469,14 +443,9 @@
   <section id="release-track" class="py-16 lg:py-20 border-b border-[#23262F]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <div class="font-mono text-xs text-[#666D7A] uppercase tracking-wider mb-1.5">
-            Release Progression
-          </div>
-          <h2 class="font-display font-bold text-2xl sm:text-3xl text-[#ECEEF2]">
-            ANSA OS Versions (v0.01 &rarr; v0.3)
-          </h2>
-        </div>
+        <h2 class="font-display font-bold text-2xl sm:text-3xl text-[#ECEEF2]">
+          ANSA OS Releases
+        </h2>
         <button onclick="openMediaUploadModal()" class="self-start sm:self-auto px-4 py-2 rounded-lg bg-[#12141A] hover:bg-[#181B22] border border-[#23262F] text-[#ECEEF2] font-mono text-xs transition-colors">
           + Load Local Demo Video
         </button>
@@ -495,7 +464,6 @@
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="p-5 rounded-xl bg-[#12141A] border border-[#23262F]">
-          <div class="font-mono text-xs text-[#666D7A] mb-2">ANSA v0.01</div>
           <h3 class="font-display font-semibold text-base text-[#ECEEF2]">Drone Kernel &amp; Scheduler</h3>
           <p class="text-xs text-[#9BA1AE] mt-2 leading-relaxed">
             C task scheduler, sensor APIs (IMU, barometer, magnetometer), event queue, and failsafe checks.
@@ -503,7 +471,6 @@
         </div>
 
         <div class="p-5 rounded-xl bg-[#12141A] border border-[#23262F]">
-          <div class="font-mono text-xs text-[#666D7A] mb-2">ANSA v0.1</div>
           <h3 class="font-display font-semibold text-base text-[#ECEEF2]">FSM &amp; Mission Runtime</h3>
           <p class="text-xs text-[#9BA1AE] mt-2 leading-relaxed">
             50 Hz finite-state machine, HAL emulator/simulator, Gazebo kernel tests, and RTOS integration.
@@ -511,7 +478,6 @@
         </div>
 
         <div class="p-5 rounded-xl bg-[#12141A] border border-[#23262F]">
-          <div class="font-mono text-xs text-[#666D7A] mb-2">ANSA v0.2</div>
           <h3 class="font-display font-semibold text-base text-[#ECEEF2]">SB ELIO &amp; Hardware BSP</h3>
           <p class="text-xs text-[#9BA1AE] mt-2 leading-relaxed">
             Board support for SB ELIO (ESP32-S3 + RP2350B), flasher tooling, and failsafe control logic.
@@ -519,7 +485,6 @@
         </div>
 
         <div class="p-5 rounded-xl bg-[#181B22] border border-[#3B4252]">
-          <div class="font-mono text-xs text-emerald-400 mb-2">ANSA v0.3 · CURRENT</div>
           <h3 class="font-display font-semibold text-base text-[#ECEEF2]">ANSA Studio &amp; Board Independence</h3>
           <p class="text-xs text-[#9BA1AE] mt-2 leading-relaxed">
             GUI v1, STM32/Nucleo board independence, multi-drone control architecture, and Certainty validation.
